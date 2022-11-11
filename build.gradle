@@ -78,7 +78,7 @@ repositories {
 }
 
 artifactory {
-    contextUrl = '${artifactory_url}'
+    contextUrl = "${artifactory_url}"
 
     publish {
         repository {
