@@ -55,7 +55,7 @@ public class Router {
 
         lastLoading = System.currentTimeMillis();
 
-        logger.info("Loaded routes: \n\t{}", routes.stream().map(Route::toString).collect(Collectors.joining("\n\t")));
+        logger.info("Loaded routes: \n\t{}", routes.stream().map(Route::toFixedLengthString).collect(Collectors.joining("\n\t")));
     }
 
 
@@ -652,6 +652,10 @@ public class Router {
         @Override
         public String toString() {
             return method + " " + path + " -> " + action;
+        }
+
+        public String toFixedLengthString() {
+            return String.format("%-8s%-50s%-25s", method, path, action);
         }
     }
 
