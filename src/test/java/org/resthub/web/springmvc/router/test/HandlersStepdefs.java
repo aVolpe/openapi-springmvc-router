@@ -289,6 +289,7 @@ public class HandlersStepdefs {
         }
 
         ha.handle(request, response, handler);
+        System.out.println(response.getContentAsString());
 
         assertThat(response.getStatus()).isEqualTo(status);
     }

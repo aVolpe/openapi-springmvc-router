@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,10 +53,9 @@ public class MyTestController {
     public void hostAction(@PathVariable(value = "host") String host) {
     }
 
-    public ResponseEntity<List<String>> listPets() {
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Arrays.asList("DOG", "CAT"));
+    @ResponseBody
+    public List<String> listPets() {
+        return Arrays.asList("DOG", "CAT");
     }
 
     public ResponseEntity<Map<String, String>> createPet(@RequestBody Object body) throws URISyntaxException {
@@ -64,9 +64,8 @@ public class MyTestController {
                 .body(Collections.singletonMap("data", body.toString()));
     }
 
-    public ResponseEntity<Map<String, String>> showPetById(@PathVariable("petId") String id) {
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Collections.singletonMap("name", id));
+    @ResponseBody
+    public Map<String, String> showPetById(@PathVariable("petId") String id) {
+        return Collections.singletonMap("name", id);
     }
 }
