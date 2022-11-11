@@ -88,7 +88,7 @@ artifactory {
         }
 
         defaults {
-            publications 'mavenJava'
+            publications 'maven'
             publishBuildInfo = true
             publishArtifacts = true
             publishPom = true
@@ -96,7 +96,7 @@ artifactory {
         }
     }
 
-    clientConfig.includeEnvVars = true
+    clientConfig.includeEnvVars = false
     clientConfig.envVarsExcludePatterns = '*pwd*,*password*,*PWD*,*PASSWORD*,*Password,*secret*,*SECRET*,*key*,*KEY*,sonar.login'
     clientConfig.info.buildNumber = version
 }
