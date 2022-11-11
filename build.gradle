@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'java-library'
     id 'maven-publish'
     id "io.spring.dependency-management" version "1.1.0"
 }
@@ -18,6 +19,12 @@ dependencyManagement {
             mavenBom 'io.cucumber:cucumber-bom:7.9.0'
 
         }
+
+        dependencySet(group: 'io.swagger.core.v3', version: '2.2.4') {
+            entry 'swagger-models'
+            entry 'swagger-core'
+        }
+
         dependency 'commons-io:commons-io:2.11.0'
     }
 }
@@ -30,11 +37,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api'
     implementation 'net.sourceforge.jregex:jregex:1.2_01'
     implementation 'commons-io:commons-io'
-//    implementation 'javax.servlet:jsp-api'
-//    implementation 'org.apache.velocity:velocity'
     implementation 'org.springframework.hateoas:spring-hateoas'
-//    runtimeOnly 'log4j:log4j'
-//    runtimeOnly 'org.slf4j:slf4j-log4j12'
+    implementation 'io.swagger.core.v3:swagger-models'
+    implementation 'io.swagger.core.v3:swagger-core'
     testImplementation 'org.springframework:spring-test'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'io.cucumber:cucumber-java'
@@ -45,7 +50,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-config'
     testImplementation 'org.springframework.security:spring-security-acl'
     testImplementation 'org.springframework.security:spring-security-web'
-//    testImplementation 'cglib:cglib-nodep'
+    testImplementation 'org.slf4j:slf4j-simple'
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
     testImplementation 'jakarta.servlet:jakarta.servlet-api'
 }

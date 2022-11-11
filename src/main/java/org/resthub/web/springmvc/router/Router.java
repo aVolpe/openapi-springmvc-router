@@ -1,22 +1,23 @@
 package org.resthub.web.springmvc.router;
 
+import jregex.Matcher;
+import jregex.Pattern;
+import jregex.REFlags;
+import org.apache.commons.io.FileUtils;
+import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
+import org.resthub.web.springmvc.router.exceptions.NoRouteFoundException;
+import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
+import org.resthub.web.springmvc.router.parser.ByLineRouterLoader;
+import org.resthub.web.springmvc.router.parser.OpenApiRouteLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
-
-import jregex.Matcher;
-import jregex.Pattern;
-import jregex.REFlags;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
-import org.resthub.web.springmvc.router.exceptions.NoRouteFoundException;
-import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
+import java.util.stream.Collectors;
 
 /**
  * <p>The router matches HTTP requests to action invocations.
@@ -28,7 +29,6 @@ import org.springframework.core.io.Resource;
  */
 public class Router {
 
-    static Pattern routePattern = new Pattern("^({method}GET|POST|PUT|DELETE|PATCH|OPTIONS|HEAD|\\*)[(]?({headers}[^)]*)(\\))?\\s+({path}.*/[^\\s]*)\\s+({action}[^\\s(]+)({params}.+)?(\\s*)$");
     /**
      * Pattern used to locate a method override instruction
      */
@@ -46,76 +46,34 @@ public class Router {
 
     /**
      * Parse the routes file. This is called at startup.
-     *
      */
     public static void load(List<Resource> fileResources) throws IOException {
         routes.clear();
         for (Resource res : fileResources) {
-            parse(res);
+            routes.addAll(parse(res));
         }
 
         lastLoading = System.currentTimeMillis();
+
+        logger.info("Loaded routes: \n\t{}", routes.stream().map(Route::toString).collect(Collectors.joining("\n\t")));
     }
 
-    /**
-     * This one can be called to add new route. Last added is first in the route
-     * list.
-     */
-    public static void prependRoute(String method, String path, String action, String headers) {
-        prependRoute(method, path, action, null, headers);
-    }
-
-    /**
-     * This one can be called to add new route. Last added is first in the route
-     * list.
-     */
-    public static void prependRoute(String method, String path, String action) {
-        prependRoute(method, path, action, null, null);
-    }
 
     /**
      * Add a route at the given position
      */
-    public static void addRoute(int position, String method, String path, String action, String params, String headers) {
+    public static void addRoute(int position, Route route) {
         if (position > routes.size()) {
             position = routes.size();
         }
-        routes.add(position, getRoute(method, path, action, params, headers));
-    }
-
-    /**
-     * Add a route at the given position
-     */
-    public static void addRoute(int position, String method, String path, String headers) {
-        addRoute(position, method, path, null, null, headers);
-    }
-
-    /**
-     * Add a route at the given position
-     */
-    public static void addRoute(int position, String method, String path, String action, String headers) {
-        addRoute(position, method, path, action, null, headers);
-    }
-
-    /**
-     * Add a new route. Will be first in the route list
-     */
-    public static void addRoute(String method, String path, String action) {
-        prependRoute(method, path, action);
-    }
-
-    /**
-     * Add a route at the given position
-     */
-    public static void addRoute(String method, String path, String action, String headers) {
-        addRoute(method, path, action, null, headers);
+        routes.add(position, route);
     }
 
     /**
      * Add a route
      */
-    public static void addRoute(String method, String path, String action, String params, String headers) {
-        appendRoute(method, path, action, params, headers, null, 0);
+    public static void addRoute(Route route) {
+        routes.add(route);
     }
 
     /**
@@ -123,74 +81,37 @@ public class Router {
      * are added matters and we want the method to append the routes to the
      * list.
      */
-    public static void appendRoute(String method, String path, String action, String params, String headers, String sourceFile, int line) {
-        routes.add(getRoute(method, path, action, params, headers, sourceFile, line));
+    public static void appendRoute(Route route) {
+        routes.add(route);
     }
 
-    public static Route getRoute(String method, String path, String action, String params, String headers) {
-        return getRoute(method, path, action, params, headers, null, 0);
-    }
-
-    public static Route getRoute(String method, String path, String action, String params, String headers, String sourceFile, int line) {
-        Route route = new Route();
-        route.method = method;
-        route.path = path.replace("//", "/");
-        route.action = action;
-        route.routesFile = sourceFile;
-        route.routesFileLine = line;
-        route.addFormat(headers);
-        route.addParams(params);
-        route.compute();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Adding [" + route.toString() + "] with params [" + params + "] and headers [" + headers + "]");
-        }
-
-        return route;
-    }
 
     /**
      * Add a new route at the beginning of the route list
      */
-    public static void prependRoute(String method, String path, String action, String params, String headers) {
-        routes.add(0, getRoute(method, path, action, params, headers));
+    public static void prependRoute(Route route) {
+        routes.add(0, route);
     }
 
     /**
      * Parse a route file.
      *
-     * @param fileResource
-     * @throws IOException
+     * @param fileResource the file to read
+     * @return all found routes
      */
-    static void parse(Resource fileResource) throws IOException {
+    static List<Route> parse(Resource fileResource) throws IOException {
 
-        String fileAbsolutePath = fileResource.getFile().getAbsolutePath();
-        String content = IOUtils.toString(fileResource.getInputStream());
+        String fileAbsolutePath = fileResource.getURL().getPath();
 
-        parse(content, fileAbsolutePath);
-    }
+        List<String> openApiExtensions = Arrays.asList("yml", "yaml", "json");
 
-    static void parse(String content, String fileAbsolutePath) throws IOException {
-        int lineNumber = 0;
-        for (String line : content.split("\n")) {
-            lineNumber++;
-            line = line.trim().replaceAll("\\s+", " ");
-            if (line.length() == 0 || line.startsWith("#")) {
-                continue;
-            }
-            Matcher matcher = routePattern.matcher(line);
-            if (matcher.matches()) {
-
-                String action = matcher.group("action");
-                String method = matcher.group("method");
-                String path = matcher.group("path");
-                String params = matcher.group("params");
-                String headers = matcher.group("headers");
-                appendRoute(method, path, action, params, headers, fileAbsolutePath, lineNumber);
-            } else {
-                logger.error("Invalid route definition : " + line);
-            }
+        for (String ext : openApiExtensions) {
+            if (fileAbsolutePath.endsWith(ext)) return new OpenApiRouteLoader().load(fileResource);
         }
+
+        return new ByLineRouterLoader().load(fileResource);
     }
+
 
     public static void detectChanges(List<Resource> fileResources) throws IOException {
 
@@ -208,18 +129,18 @@ public class Router {
         }
     }
 
-    public static List<Route> routes = new ArrayList<Route>(500);
+    public static List<Route> routes = new ArrayList<>(500);
 
     public static Route route(HTTPRequestAdapter request) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Route: " + request.path + " - " + request.querystring);
+            logger.trace("Route: {} - {}", request.path, request.querystring);
         }
-        // request method may be overriden if a x-http-method-override parameter is given
+        // request method may be overridden if a x-http-method-override parameter is given
         if (request.querystring != null && methodOverride.matches(request.querystring)) {
             Matcher matcher = methodOverride.matcher(request.querystring);
             if (matcher.matches()) {
                 if (logger.isTraceEnabled()) {
-                    logger.trace("request method %s overriden to %s ", request.method, matcher.group("method"));
+                    logger.trace("request method {} overridden to {} ", request.method, matcher.group("method"));
                 }
                 request.method = matcher.group("method");
             }
@@ -236,7 +157,7 @@ public class Router {
                 if (args.containsKey("format")) {
                     request.setFormat(args.get("format"));
                 }
-                if (request.action.indexOf("{") > -1) { // more optimization ?
+                if (request.action.contains("{")) {
                     for (String arg : request.routeArgs.keySet()) {
                         request.action = request.action.replace("{" + arg + "}", request.routeArgs.get(arg));
                     }
@@ -249,9 +170,7 @@ public class Router {
             request.method = "GET";
             Route route = route(request);
             request.method = "HEAD";
-            if (route != null) {
-                return route;
-            }
+            return route;
         }
         throw new NoRouteFoundException(request.method, request.path);
     }
@@ -272,12 +191,12 @@ public class Router {
                 return args;
             }
         }
-        return new HashMap<String, String>(16);
+        return new HashMap<>(16);
     }
 
     public static ActionDefinition reverse(String action) {
         // Note the map is not <code>Collections.EMPTY_MAP</code> because it will be copied and changed.
-        return reverse(action, new HashMap<String, Object>(16));
+        return reverse(action, new HashMap<>(16));
     }
 
     public static String getFullUrl(String action, Map<String, Object> args) {
@@ -286,7 +205,7 @@ public class Router {
 
     public static String getFullUrl(String action) {
         // Note the map is not <code>Collections.EMPTY_MAP</code> because it will be copied and changed.
-        return getFullUrl(action, new HashMap<String, Object>(16));
+        return getFullUrl(action, new HashMap<>(16));
     }
 
     public static Collection<Route> resolveActions(String action) {
@@ -307,9 +226,9 @@ public class Router {
 
     public static ActionDefinition reverse(String action, Map<String, Object> args) {
 
-	    HTTPRequestAdapter currentRequest = HTTPRequestAdapter.getCurrent();
+        HTTPRequestAdapter currentRequest = HTTPRequestAdapter.getCurrent();
 
-        Map<String, Object> argsbackup = new HashMap<String, Object>(args);
+        Map<String, Object> argsbackup = new HashMap<>(args);
         for (Route route : routes) {
             if (route.actionPattern != null) {
                 Matcher matcher = route.actionPattern.matcher(action);
@@ -321,7 +240,7 @@ public class Router {
                         }
                         args.put(group, v.toLowerCase());
                     }
-                    List<String> inPathArgs = new ArrayList<String>(16);
+                    List<String> inPathArgs = new ArrayList<>(16);
                     boolean allRequiredArgsAreHere = true;
                     // les noms de parametres matchent ils ?
                     for (Route.Arg arg : route.args) {
@@ -370,14 +289,14 @@ public class Router {
                         StringBuilder queryString = new StringBuilder();
                         String path = route.path;
                         //add contextPath and servletPath if set in the current request
-                        if( currentRequest != null) {
+                        if (currentRequest != null) {
 
-                            if(!currentRequest.servletPath.isEmpty() && !currentRequest.servletPath.equals("/")) {
-                            	String servletPath = currentRequest.servletPath;
-                                path = (servletPath.startsWith("/") ?  servletPath : "/" + servletPath) + path;
+                            if (!currentRequest.servletPath.isEmpty() && !currentRequest.servletPath.equals("/")) {
+                                String servletPath = currentRequest.servletPath;
+                                path = (servletPath.startsWith("/") ? servletPath : "/" + servletPath) + path;
                             }
-                            if(!currentRequest.contextPath.isEmpty() && !currentRequest.contextPath.equals("/")) {
-                            	String contextPath = currentRequest.contextPath; 
+                            if (!currentRequest.contextPath.isEmpty() && !currentRequest.contextPath.equals("/")) {
+                                String contextPath = currentRequest.contextPath;
                                 path = (contextPath.startsWith("/") ? contextPath : "/" + contextPath) + path;
                             }
                         }
@@ -460,40 +379,6 @@ public class Router {
         throw new NoHandlerFoundException(action, args);
     }
 
-    private static void addToQuerystring(StringBuilder queryString, String key, Object value) {
-        if (List.class.isAssignableFrom(value.getClass())) {
-            @SuppressWarnings("unchecked")
-            List<Object> vals = (List<Object>) value;
-            for (Object object : vals) {
-                try {
-                    queryString.append(URLEncoder.encode(key, "utf-8"));
-                    queryString.append("=");
-                    if (object.toString().startsWith(":")) {
-                        queryString.append(object.toString());
-                    } else {
-                        queryString.append(URLEncoder.encode(object.toString() + "", "utf-8"));
-                    }
-                    queryString.append("&");
-                } catch (UnsupportedEncodingException ex) {
-                }
-            }
-//        } else if (value.getClass().equals(Default.class)) {
-//            // Skip defaults in queryString
-        } else {
-            try {
-                queryString.append(URLEncoder.encode(key, "utf-8"));
-                queryString.append("=");
-                if (value.toString().startsWith(":")) {
-                    queryString.append(value.toString());
-                } else {
-                    queryString.append(URLEncoder.encode(value.toString() + "", "utf-8"));
-                }
-                queryString.append("&");
-            } catch (UnsupportedEncodingException ex) {
-            }
-        }
-    }
-
     public static class ActionDefinition {
 
         /**
@@ -543,7 +428,7 @@ public class Router {
         }
 
         public void absolute() {
-	        HTTPRequestAdapter currentRequest = HTTPRequestAdapter.getCurrent();
+            HTTPRequestAdapter currentRequest = HTTPRequestAdapter.getCurrent();
             if (!url.startsWith("http")) {
                 if (host == null || host.isEmpty()) {
                     url = currentRequest.getBase() + url;
@@ -589,7 +474,6 @@ public class Router {
         }
 
 
-
         /**
          * HTTP method, e.g. "GET".
          */
@@ -601,15 +485,14 @@ public class Router {
         Pattern pattern;
         Pattern hostPattern;
         List<Arg> args = new ArrayList<Arg>(3);
-        Map<String, String> staticArgs = new HashMap<String, String>(3);
-        List<String> formats = new ArrayList<String>(1);
+        public Map<String, String> staticArgs = new HashMap<String, String>(3);
+        public List<String> formats = new ArrayList<>(1);
         String host;
         Arg hostArg = null;
         public int routesFileLine;
         public String routesFile;
         static Pattern customRegexPattern = new Pattern("\\{([a-zA-Z_0-9]+)\\}");
         static Pattern argsPattern = new Pattern("\\{<([^>]+)>([a-zA-Z_0-9]+)\\}");
-        static Pattern paramPattern = new Pattern("\\s*([a-zA-Z_0-9]+)\\s*:\\s*'(.*)'\\s*");
 
         public void compute() {
             this.host = "";
@@ -625,8 +508,8 @@ public class Router {
                 String pattern = host.replaceAll("\\.", "\\\\.").replaceAll("\\{.*\\}", "(.*)");
 
                 if (logger.isTraceEnabled()) {
-                    logger.trace("pattern [" + pattern + "]");
-                    logger.trace("host [" + host + "]");
+                    logger.trace("pattern [{}]", pattern);
+                    logger.trace("host [{}]", host);
                 }
 
                 Matcher m = new Pattern(pattern).matcher(host);
@@ -638,7 +521,7 @@ public class Router {
                         hostArg = new Arg();
                         hostArg.name = name;
                         if (logger.isTraceEnabled()) {
-                            logger.trace("hostArg name [" + name + "]");
+                            logger.trace("hostArg name [{}]", name);
                         }
                         // The default value contains the route version of the host ie {client}.bla.com
                         // It is temporary and it indicates it is an url route.
@@ -647,7 +530,7 @@ public class Router {
                         hostArg.constraint = new Pattern(".*");
 
                         if (logger.isTraceEnabled()) {
-                            logger.trace("adding hostArg [" + hostArg + "]");
+                            logger.trace("adding hostArg [{}]", hostArg);
                         }
 
                         args.add(hostArg);
@@ -678,29 +561,8 @@ public class Router {
             actionPattern = new Pattern(patternString, REFlags.IGNORE_CASE);
         }
 
-        public void addParams(String params) {
-            if (params == null || params.length() < 1) {
-                return;
-            }
-            params = params.substring(1, params.length() - 1);
-            for (String param : params.split(",")) {
-                Matcher matcher = paramPattern.matcher(param);
-                if (matcher.matches()) {
-                    staticArgs.put(matcher.group(1), matcher.group(2));
-                } else {
-                    logger.warn("Ignoring " + param + " (static params must be specified as key:'value',...)");
-                }
-            }
-        }
 
         // TODO: Add args names
-        public void addFormat(String params) {
-            if (params == null || params.length() < 1) {
-                return;
-            }
-            params = params.trim();
-            formats.addAll(Arrays.asList(params.split(",")));
-        }
 
         private boolean contains(String accept) {
             boolean contains = (accept == null);
@@ -750,7 +612,7 @@ public class Router {
                 // Extract the host variable
                 if (matcher.matches() && contains(accept) && hostMatches) {
 
-                    Map<String, String> localArgs = new HashMap<String, String>();
+                    Map<String, String> localArgs = new HashMap<>();
                     for (Arg arg : args) {
                         // FIXME: Careful with the arguments that are not matching as they are part of the hostname
                         // Defaultvalue indicates it is a one of these urls. This is a trick and should be changed.

@@ -4,9 +4,12 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.swagger.v3.core.util.Json;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.RouterHandlerMapping;
 import org.resthub.web.springmvc.router.support.RouterHandler;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
@@ -19,8 +22,8 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
 import org.springframework.web.servlet.*;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,6 +42,7 @@ public class HandlersStepdefs {
     private String contextPath = "";
     private List<HTTPParam> queryParams = new ArrayList<HTTPParam>();
     private List<HTTPHeader> headers = new ArrayList<HTTPHeader>();
+    private String body = null;
 
     private MockHttpServletRequest request;
 
@@ -48,9 +52,6 @@ public class HandlersStepdefs {
 
     @Given("^I have a web application with the config locations \"([^\"]*)\"$")
     public void I_have_a_web_applications_with_the_config_locations(String locations) throws Throwable {
-        if (locations.equals("/multiplefilesTestContext.xml")) {
-            System.out.println("AAAAA");
-        }
         I_have_a_web_application_configured_locations_servletPath_contextPath(locations, "", "");
     }
 
@@ -75,6 +76,20 @@ public class HandlersStepdefs {
 
     @Given("^I have a web application with javaconfig in package \"([^\"]*)\"$")
     public void I_have_a_web_application_with_javaconfig_in_package(String scanPackage) throws Throwable {
+        MockServletContext sc = new MockServletContext("");
+        AnnotationConfigWebApplicationContext appContext = new AnnotationConfigWebApplicationContext();
+        appContext.scan(scanPackage);
+        appContext.setServletContext(sc);
+        appContext.refresh();
+
+        this.wac = appContext;
+
+        this.hm = appContext.getBean(RouterHandlerMapping.class);
+        this.ha = appContext.getBean(RequestMappingHandlerAdapter.class);
+    }
+
+    @Given("^I have a web application with javaconfig for openAPI in package \"([^\"]*)\"$")
+    public void I_have_a_web_application_with_javaconfig_for_openAPI_in_package(String scanPackage) throws Throwable {
         MockServletContext sc = new MockServletContext("");
         AnnotationConfigWebApplicationContext appContext = new AnnotationConfigWebApplicationContext();
         appContext.scan(scanPackage);
@@ -144,6 +159,11 @@ public class HandlersStepdefs {
             request.addParameter(param.name, param.value);
         }
 
+        if (body != null) {
+            request.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            request.setContent(body.getBytes(StandardCharsets.UTF_8));
+        }
+
         request.setPathInfo(url.substring(pathLength));
         chain = this.hm.getHandler(request);
     }
@@ -170,7 +190,6 @@ public class HandlersStepdefs {
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes(request);
         RequestContextHolder.setRequestAttributes(requestAttributes);
 
-        System.out.println(request);
         chain = this.hm.getHandler(request);
     }
 
@@ -196,6 +215,13 @@ public class HandlersStepdefs {
         I_send_the_HTTP_request(method, url);
     }
 
+    @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\" with body:$")
+    public void I_send_the_HTTP_request_with_body(String method, String url, DataTable body) throws Throwable {
+
+        this.body = Json.pretty(body.asMap());
+        I_send_the_HTTP_request(method, url);
+    }
+
     @Then("^no handler should be found$")
     public void no_handler_should_be_found() throws Throwable {
 
@@ -205,13 +231,6 @@ public class HandlersStepdefs {
     @Then("^the request should be handled by \"([^\"]*)\"$")
     public void the_request_should_be_handled_by(String controllerAction) throws Throwable {
 
-        if (controllerAction.equals("myTestController.wildcardB")) {
-            System.out.println("AAAAAAA");
-            this.I_send_the_HTTP_request("GET", "/wildcard-b");
-        }
-
-        System.out.println(controllerAction);
-        System.out.println(request);
         assertThat(chain).isNotNull();
         RouterHandler handler = (RouterHandler) chain.getHandler();
 
@@ -247,8 +266,6 @@ public class HandlersStepdefs {
         ModelAndView mv = ha.handle(request, new MockHttpServletResponse(), handler);
 
         for (Map<String, String> param : mavparams.asMaps()) {
-            System.out.println(param);
-            System.out.println(param.get("name"));
             if (param.isEmpty()) continue;
             assertThat(param.get("value")).isEqualTo(mv.getModel().get(param.get("key")).toString());
         }
@@ -263,27 +280,17 @@ public class HandlersStepdefs {
         if (chain != null) {
             handler = (RouterHandler) chain.getHandler();
         }
+        assertThat(chain).isNotNull();
 
         HandlerInterceptor[] interceptors = chain.getInterceptors();
 
-        for (HandlerInterceptor interceptor : Arrays.asList(interceptors)) {
+        for (HandlerInterceptor interceptor : interceptors) {
             interceptor.preHandle(request, response, handler);
         }
 
         ha.handle(request, response, handler);
+
         assertThat(response.getStatus()).isEqualTo(status);
-    }
-
-    @Then("^the raw link should be \"([^\"]*)\"$")
-    public void the_raw_link_should_be(String link) throws Throwable {
-
-//        assertThat(linkBuilder.toString()).isEqualTo(link);
-    }
-
-    @Then("^the self rel link should be \"(.*)\"$")
-    public void the_self_rel_link_should_be(String link) throws Throwable {
-
-//        assertThat(linkBuilder.withSelfRel().toString()).isEqualTo(link);
     }
 
     public static class HTTPHeader {

@@ -7,6 +7,7 @@ import io.cucumber.java.en.When;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router;
 import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
+import org.resthub.web.springmvc.router.parser.ByLineRouterLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -38,7 +39,7 @@ public class ReverseRoutingStepdefs {
 
     @Given("^I have a route with method \"([^\"]*)\" path \"([^\"]*)\" action \"([^\"]*)\"$")
     public void I_have_a_route_with_method_url_action(String method, String path, String action) throws Throwable {
-        Router.prependRoute(method, path, action);
+        Router.prependRoute(new ByLineRouterLoader().buildRoute(method, path, action));
     }
 
     @Given("^I have routes:$")
@@ -46,7 +47,7 @@ public class ReverseRoutingStepdefs {
         for (RouteItem item : routes
                 .asMaps().stream().map(m -> new RouteItem(m.get("method"), m.get("path"), m.get("action"), m.get("params")))
                 .collect(Collectors.toList())) {
-            Router.addRoute(item.method, item.path, item.action, item.params, null);
+            Router.addRoute(new ByLineRouterLoader().buildRoute(item.method, item.path, item.action, item.params, null));
         }
     }
 

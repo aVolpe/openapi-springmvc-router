@@ -21,23 +21,24 @@ import java.util.Map;
  * @author Brian Clozel
  */
 public class RouterHandlerResolver {
-    
-    private Map<String, Object> cachedControllers = new LinkedHashMap<String, Object>();
-    
-    private final Map<String, HandlerMethod> cachedHandlers = new LinkedHashMap<String, HandlerMethod>();
+
+    private Map<String, Object> cachedControllers = new LinkedHashMap<>();
+
+    private final Map<String, HandlerMethod> cachedHandlers = new LinkedHashMap<>();
 
     private static final Logger logger = LoggerFactory.getLogger(RouterHandlerResolver.class);
-    
+
     public void setCachedControllers(Map<String, Object> controllers) {
-        
-        for(String key : controllers.keySet()) {
-            this.cachedControllers.put(key.toLowerCase(), controllers.get(key));            
+
+        for (String key : controllers.keySet()) {
+            this.cachedControllers.put(key.toLowerCase(), controllers.get(key));
         }
     }
 
     /**
      * Returns a proper HandlerMethod given the matching Route
-     * @param route the matching Route for the current request
+     *
+     * @param route      the matching Route for the current request
      * @param fullAction string "controller.action"
      * @return HandlerMethod to be used by the RequestAdapter
      * @throws ActionNotFoundException
@@ -45,9 +46,9 @@ public class RouterHandlerResolver {
     public HandlerMethod resolveHandler(Router.Route route, String fullAction, HTTPRequestAdapter req) throws ActionNotFoundException {
 
         HandlerMethod handlerMethod;
-        
+
         // check if the Handler is already cached
-        if(this.cachedHandlers.containsKey(fullAction)) {
+        if (this.cachedHandlers.containsKey(fullAction)) {
             handlerMethod = this.cachedHandlers.get(fullAction);
         } else {
             handlerMethod = this.doResolveHandler(route, fullAction);
@@ -56,9 +57,9 @@ public class RouterHandlerResolver {
 
         return handlerMethod;
     }
-    
+
     private HandlerMethod doResolveHandler(Router.Route route, String fullAction) throws ActionNotFoundException {
-        
+
         Method actionMethod;
         Object controllerObject;
 
@@ -78,14 +79,14 @@ public class RouterHandlerResolver {
             logger.debug("Did not find handler method {}.{} for [{} {}]", controller, action, route.method, route.path);
             throw new ActionNotFoundException(fullAction, new Exception("No method public static void " + action + "() was found in class " + controller));
         }
-        
+
         return new RouterHandler(controllerObject, actionMethod, route);
     }
 
     /**
      * Find the first public static method of a controller class
      *
-     * @param name The method name
+     * @param name       The method name
      * @param controller The controller
      * @return The method or null
      */

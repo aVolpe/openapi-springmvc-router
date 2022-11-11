@@ -34,7 +34,7 @@ import java.util.List;
  *
  * <pre class="code"> &lt;bean
  * class="org.resthub.web.springmvc.router.RouterHandlerMapping"&gt;
- * &lt;property name="routeFiles"&gt; 
+ * &lt;property name="routeFiles"&gt;
  * &lt;list&gt;
  *   &lt;value&gt;bindingroutes.conf&lt;/value&gt;
  *   &lt;value&gt;addroutes.conf&lt;/value&gt;
@@ -52,7 +52,7 @@ import java.util.List;
  * <p> RouterHandlerMapping loads routes configuration from a file for route
  * configuration syntax (the Router implementation is adapted from Play!
  * Framework {@link http://www.playframework.org/documentation/1.0.3/routes#syntax}).
- *
+ * <p>
  * Example:
  *
  * <pre class="code"> GET /home PageController.showPage(id:'home') GET
@@ -84,7 +84,7 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
     }
 
     public void setRouteFiles(List<String> routeFiles) {
-        Assert.notEmpty(routeFiles,"routes configuration files list should not be empty");
+        Assert.notEmpty(routeFiles, "routes configuration files list should not be empty");
         this.routeFiles = routeFiles;
     }
 
@@ -99,19 +99,19 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
     public void setAutoReloadEnabled(boolean autoReloadEnabled) {
         this.autoReloadEnabled = autoReloadEnabled;
     }
-    
+
     /**
      * Reload routes configuration at runtime. No-op if configuration files
      * didn't change since last reload.
      */
     public void reloadRoutesConfiguration() {
         List<Resource> fileResources = new ArrayList<>();
-        
+
         try {
             for (String fileName : this.routeFiles) {
                 fileResources.addAll(Arrays.asList(getApplicationContext().getResources(fileName)));
             }
-            
+
             Router.detectChanges(fileResources);
         } catch (IOException ex) {
             throw new RouteFileParsingException(
@@ -132,7 +132,7 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
         List<Resource> fileResources = new ArrayList<>();
 
         try {
-            for(String fileName : this.routeFiles) {
+            for (String fileName : this.routeFiles) {
                 fileResources.addAll(Arrays.asList(getApplicationContext().getResources(fileName)));
             }
             Router.load(fileResources);
@@ -155,12 +155,12 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
             throws Exception {
 
         HandlerMethod handler;
-        
+
         // reload routes files if configured in servlet-context
-        if(this.autoReloadEnabled) {
+        if (this.autoReloadEnabled) {
             this.reloadRoutesConfiguration();
         }
-        
+
         try {
             // Adapt HTTPServletRequest for Router
             HTTPRequestAdapter rq = HTTPRequestAdapter.parseRequest(request);
@@ -174,8 +174,7 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
 
         } catch (NoRouteFoundException nrfe) {
             handler = null;
-            logger.trace("no route found for method[" + nrfe.method
-                    + "] and path[" + nrfe.path + "]");
+            logger.trace("no route found for method[{}] and path[{}]", nrfe.method, nrfe.path);
         }
 
         return handler;
