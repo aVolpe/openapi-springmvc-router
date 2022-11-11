@@ -1,8 +1,9 @@
 package org.resthub.web.springmvc.router.test;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router;
 import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
@@ -11,8 +12,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,11 +29,11 @@ public class ReverseRoutingStepdefs {
     public void an_empty_Router() throws Throwable {
         // clear routes from the static Router
         Router.clear();
-	    // clear RequestContextHolder from previous tests
-	    MockHttpServletRequest request = new MockHttpServletRequest("GET","http://localhost/");
-	    request.addHeader("host", "localhost");
-	    ServletRequestAttributes requestAttributes = new ServletRequestAttributes(request);
-	    RequestContextHolder.setRequestAttributes(requestAttributes);
+        // clear RequestContextHolder from previous tests
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "http://localhost/");
+        request.addHeader("host", "localhost");
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(requestAttributes);
     }
 
     @Given("^I have a route with method \"([^\"]*)\" path \"([^\"]*)\" action \"([^\"]*)\"$")
@@ -41,9 +42,11 @@ public class ReverseRoutingStepdefs {
     }
 
     @Given("^I have routes:$")
-    public void I_have_routes(List<RouteItem> routes) throws Throwable {
-        for(RouteItem item : routes) {
-            Router.addRoute(item.method,item.path,item.action,item.params,null);
+    public void I_have_routes(DataTable routes) throws Throwable {
+        for (RouteItem item : routes
+                .asMaps().stream().map(m -> new RouteItem(m.get("method"), m.get("path"), m.get("action"), m.get("params")))
+                .collect(Collectors.toList())) {
+            Router.addRoute(item.method, item.path, item.action, item.params, null);
         }
     }
 
@@ -51,25 +54,25 @@ public class ReverseRoutingStepdefs {
     public void the_current_request_is_processed_within_a_context_path_and_servlet_path(String contextPath, String servletPath) throws Throwable {
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/reverse-routing");
-        request.addHeader("host","example.org");
+        request.addHeader("host", "example.org");
         request.setContextPath(contextPath);
         request.setServletPath(servletPath);
 
-	    ServletRequestAttributes requestAttributes = new ServletRequestAttributes(request);
-	    RequestContextHolder.setRequestAttributes(requestAttributes);
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(requestAttributes);
 
         this.requestAdapter = HTTPRequestAdapter.parseRequest(request);
     }
 
     @When("^I try to reverse route \"([^\"]*)\" with params:$")
-    public void I_try_to_reverse_route_with_params(String path, List<ParamItem> params) throws Throwable {
-        Map<String,Object> routeParams = new HashMap<String, Object>();
-        for(ParamItem param : params) {
-              routeParams.put(param.key,param.value);
+    public void I_try_to_reverse_route_with_params(String path, DataTable params) throws Throwable {
+        Map<String, Object> routeParams = new HashMap<String, Object>();
+        for (ParamItem param : params.asMaps().stream().map(ParamItem::new).collect(Collectors.toList())) {
+            routeParams.put(param.key, param.value);
         }
         try {
-            resolvedAction = Router.reverse(path,routeParams);
-        } catch(Exception exc) {
+            resolvedAction = Router.reverse(path, routeParams);
+        } catch (Exception exc) {
             this.thrownException = exc;
         }
     }
@@ -81,7 +84,7 @@ public class ReverseRoutingStepdefs {
 
     @Then("^I should get an action with path \"([^\"]*)\"$")
     public void I_should_get_an_action_with_URL(String path) throws Throwable {
-         assertThat(path).isEqualTo(resolvedAction.url);
+        assertThat(path).isEqualTo(resolvedAction.url);
     }
 
     @Then("^I should get an action with path \"([^\"]*)\" and host \"([^\"]*)\"$")
@@ -100,10 +103,22 @@ public class ReverseRoutingStepdefs {
         public String path;
         public String action;
         public String params;
+
+        public RouteItem(String method, String path, String action, String params) {
+            this.method = method;
+            this.path = path;
+            this.action = action;
+            this.params = params;
+        }
     }
 
     public static class ParamItem {
         public String key;
         public String value;
+
+        public ParamItem(Map<String, String> params) {
+            this.key = params.get("key");
+            this.value = params.get("value");
+        }
     }
 }

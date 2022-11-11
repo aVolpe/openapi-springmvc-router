@@ -94,7 +94,7 @@ public class RouterHandlerResolver {
         //get the controller class
         //(or the corresponding target class if the current controller
         // instance is an AOP proxy
-        Class clazz = AopUtils.getTargetClass(controller);
+        Class<?> clazz = AopUtils.getTargetClass(controller);
 
         while (!clazz.getName().equals("java.lang.Object")) {
             for (Method m : clazz.getDeclaredMethods()) {

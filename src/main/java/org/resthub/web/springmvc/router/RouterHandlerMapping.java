@@ -105,7 +105,7 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
      * didn't change since last reload.
      */
     public void reloadRoutesConfiguration() {
-        List<Resource> fileResources = new ArrayList<Resource>();
+        List<Resource> fileResources = new ArrayList<>();
         
         try {
             for (String fileName : this.routeFiles) {
@@ -129,7 +129,7 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
 
         // Scan beans for Controllers
         this.methodResolver.setCachedControllers(getApplicationContext().getBeansWithAnnotation(Controller.class));
-        List<Resource> fileResources = new ArrayList<Resource>();
+        List<Resource> fileResources = new ArrayList<>();
 
         try {
             for(String fileName : this.routeFiles) {

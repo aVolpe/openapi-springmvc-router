@@ -43,7 +43,7 @@
             <list>
                 <value>mappingroutes.conf</value>
                 <value>addroutes.conf</value>
-                <value>classpath:wildcard-*.conf</value>
+                <value>classpath*:wildcard-*.conf</value>
             </list>
         </property>
     </bean>

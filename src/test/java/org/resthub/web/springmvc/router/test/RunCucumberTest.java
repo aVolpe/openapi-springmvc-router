@@ -1,6 +1,6 @@
 package org.resthub.web.springmvc.router.test;
 
-import cucumber.api.junit.Cucumber;
+import io.cucumber.junit.Cucumber;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
