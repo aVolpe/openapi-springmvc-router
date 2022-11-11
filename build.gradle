@@ -3,11 +3,13 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id "io.spring.dependency-management" version "1.1.0"
+    id "com.jfrog.artifactory" version "4.29.0"
 }
 
-group = 'org.resthub'
-version = '2.0.0-SNAPSHOT'
-description = 'springmvc-router'
+group = 'py.com.volpe'
+version = '2.0.1'
+description = 'springmvc-openapi-router'
+
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 dependencyManagement {
@@ -73,4 +75,28 @@ repositories {
         url = uri('https://repo.maven.apache.org/maven2/')
     }
     mavenCentral()
+}
+
+artifactory {
+    contextUrl = '${artifactory_url}'
+
+    publish {
+        repository {
+            repoKey = 'libs-release-local'
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+        }
+
+        defaults {
+            publications 'mavenJava'
+            publishBuildInfo = true
+            publishArtifacts = true
+            publishPom = true
+            publishIvy = false
+        }
+    }
+
+    clientConfig.includeEnvVars = true
+    clientConfig.envVarsExcludePatterns = '*pwd*,*password*,*PWD*,*PASSWORD*,*Password,*secret*,*SECRET*,*key*,*KEY*,sonar.login'
+    clientConfig.info.buildNumber = version
 }
