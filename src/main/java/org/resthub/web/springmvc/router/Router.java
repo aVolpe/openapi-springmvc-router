@@ -149,7 +149,8 @@ public class Router {
         for (Route route : routes) {
             String format = request.format;
             String host = request.host;
-            Map<String, String> args = route.matches(request.method, request.path, format, host);
+            String path = request.contextPath != null ? request.path.replace(request.contextPath, "") : request.path;
+            Map<String, String> args = route.matches(request.method, path, format, host);
 
             if (args != null) {
                 request.routeArgs = args;

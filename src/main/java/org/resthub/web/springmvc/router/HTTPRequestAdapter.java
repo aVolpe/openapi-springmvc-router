@@ -21,7 +21,7 @@ import java.util.*;
 public class HTTPRequestAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(HTTPRequestAdapter.class);
-    
+
     /**
      * Server host
      */
@@ -109,7 +109,7 @@ public class HTTPRequestAdapter {
     /**
      * is HTTPS ?
      */
-    public Boolean secure = false;
+    public boolean secure = false;
 
     public HTTPRequestAdapter() {
 
@@ -163,21 +163,19 @@ public class HTTPRequestAdapter {
         HTTPRequestAdapter request = new HTTPRequestAdapter();
 
         request.method = httpServletRequest.getMethod().intern();
-        request.path = httpServletRequest.getPathInfo() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getServletPath() ;
+        request.path = httpServletRequest.getPathInfo() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getServletPath();
         request.servletPath = httpServletRequest.getServletPath() != null ? httpServletRequest.getServletPath() : "";
         request.contextPath = httpServletRequest.getContextPath() != null ? httpServletRequest.getContextPath() : "";
         request.setQueryString(httpServletRequest.getQueryString() == null ? ""
                 : httpServletRequest.getQueryString());
 
-        logger.trace("contextPath: "
-                + request.contextPath," servletPath: " + request.servletPath);
-        logger.trace("request.path: " + request.path
-                + ", request.querystring: " + request.getQueryString());
+        logger.trace("contextPath: {}  servletPath: {}", request.contextPath, request.servletPath);
+        logger.trace("request.path: {}, request.queryString: {}", request.path, request.getQueryString());
 
         if (httpServletRequest.getHeader("Content-Type") != null) {
             request.contentType = httpServletRequest.getHeader("Content-Type").split(";")[0].trim().toLowerCase().intern();
         } else {
-            request.contentType = "text/html".intern();
+            request.contentType = "text/html";
         }
 
         if (httpServletRequest.getHeader("X-HTTP-Method-Override") != null) {

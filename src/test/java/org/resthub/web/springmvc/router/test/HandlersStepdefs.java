@@ -171,8 +171,7 @@ public class HandlersStepdefs {
     @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\" with a null pathInfo$")
     public void I_send_the_HTTP_request_with_a_null_pathInfo(String method, String url) throws Throwable {
 
-        request = new MockHttpServletRequest(this.wac.getServletContext());
-        request.setMethod(method);
+        request = new MockHttpServletRequest(this.wac.getServletContext(), method, url);
         request.setContextPath(this.contextPath);
         request.setServletPath(url.replaceFirst(this.contextPath, ""));
         request.addHeader("host", host);
