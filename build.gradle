@@ -7,17 +7,17 @@ plugins {
 }
 
 group = 'py.com.volpe'
-version = '2.0.1'
+version = '2.0.2'
 description = 'springmvc-openapi-router'
 
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 dependencyManagement {
     dependencies {
         // spring
         imports {
-            mavenBom 'org.springframework:spring-framework-bom:5.3.23'
-            mavenBom 'org.springframework.boot:spring-boot-dependencies:2.7.5'
+            mavenBom 'org.springframework:spring-framework-bom:6.0.2'
+            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.0.0'
             mavenBom 'io.cucumber:cucumber-bom:7.9.0'
 
         }
