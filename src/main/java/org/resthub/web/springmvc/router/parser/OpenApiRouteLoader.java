@@ -3,6 +3,7 @@ package org.resthub.web.springmvc.router.parser;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
+import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router.Route;
 import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
 import org.slf4j.Logger;
@@ -81,6 +82,6 @@ public class OpenApiRouteLoader {
 
     private List<String> getAcceptContentTypes(Operation op) {
         if (op.getRequestBody() == null) return Collections.emptyList();
-        return new ArrayList<>(op.getRequestBody().getContent().keySet());
+        return op.getRequestBody().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).toList();
     }
 }

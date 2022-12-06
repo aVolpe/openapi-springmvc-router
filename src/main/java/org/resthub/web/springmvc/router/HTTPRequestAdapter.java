@@ -197,20 +197,20 @@ public class HTTPRequestAdapter {
 
         request.remoteAddress = httpServletRequest.getRemoteAddr();
 
-        Enumeration headersNames = httpServletRequest.getHeaderNames();
+        Enumeration<String> headersNames = httpServletRequest.getHeaderNames();
         while (headersNames.hasMoreElements()) {
-            HTTPRequestAdapter.Header hd = request.new Header();
-            hd.name = (String) headersNames.nextElement();
-            hd.values = new ArrayList<String>();
-            Enumeration enumValues = httpServletRequest.getHeaders(hd.name);
+            HTTPRequestAdapter.Header hd = new Header();
+            hd.name = headersNames.nextElement();
+            hd.values = new ArrayList<>();
+            Enumeration<String> enumValues = httpServletRequest.getHeaders(hd.name);
             while (enumValues.hasMoreElements()) {
-                String value = (String) enumValues.nextElement();
+                String value = enumValues.nextElement();
                 hd.values.add(value);
             }
             request.headers.put(hd.name.toLowerCase(), hd);
         }
 
-        request.resolveFormat();
+        request.format = resolveFormat(request.headers.getOrDefault("accept", new Header()).value());
 
         return request;
     }
@@ -227,49 +227,36 @@ public class HTTPRequestAdapter {
      * Automatically resolve request format from the Accept header (in this
      * order : html > xml > json > text)
      */
-    public void resolveFormat() {
+    public static String resolveFormat(String accept) {
 
-        if (format != null) {
-            return;
+        if (accept == null) {
+            return "html";
         }
-
-        if (headers.get("accept") == null) {
-            format = "html".intern();
-            return;
-        }
-
-        String accept = headers.get("accept").value();
 
         if (accept.contains("application/xhtml")
                 || accept.contains("text/html")
                 || accept.startsWith("*/*")) {
-            format = "html".intern();
-            return;
+            return "html";
         }
 
         if (accept.contains("application/xml")
                 || accept.contains("text/xml")) {
-            format = "xml".intern();
-            return;
+            return "xml";
         }
 
         if (accept.contains("text/plain")) {
-            format = "txt".intern();
-            return;
+            return "txt";
         }
 
         if (accept.contains("application/json")
                 || accept.contains("text/javascript")) {
-            format = "json".intern();
-            return;
+            return "json";
         }
 
-        if (accept.endsWith("*/*")) {
-            format = "html".intern();
-        }
+        return "html";
     }
 
-    public class Header {
+    public static class Header {
 
         public String name;
         public List<String> values;
@@ -283,6 +270,7 @@ public class HTTPRequestAdapter {
          * @return The first value
          */
         public String value() {
+            if (values == null || values.isEmpty()) return null;
             return values.get(0);
         }
     }

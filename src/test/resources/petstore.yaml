@@ -44,6 +44,11 @@ paths:
       operationId: myTestController.createPet
       tags:
         - pets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
       responses:
         '201':
           description: Null response
