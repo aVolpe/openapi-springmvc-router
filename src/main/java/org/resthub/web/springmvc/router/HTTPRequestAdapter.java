@@ -230,7 +230,7 @@ public class HTTPRequestAdapter {
     public static String resolveFormat(String accept) {
 
         if (accept == null) {
-            return "html";
+            return null;
         }
 
         if (accept.contains("application/xhtml")
@@ -253,7 +253,7 @@ public class HTTPRequestAdapter {
             return "json";
         }
 
-        return "html";
+        return null;
     }
 
     public static class Header {

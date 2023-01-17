@@ -161,7 +161,6 @@ public class HandlersStepdefs {
 
         if (body != null) {
             request.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            request.addHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
             request.setContent(body.getBytes(StandardCharsets.UTF_8));
         }
 
@@ -280,7 +279,7 @@ public class HandlersStepdefs {
         if (chain != null) {
             handler = (RouterHandler) chain.getHandler();
         }
-        assertThat(chain).isNotNull();
+        assertThat(chain).withFailMessage("Can't find router in chain %s %s", this.request.getMethod(), this.request.getRequestURI()).isNotNull();
 
         HandlerInterceptor[] interceptors = chain.getInterceptors();
 

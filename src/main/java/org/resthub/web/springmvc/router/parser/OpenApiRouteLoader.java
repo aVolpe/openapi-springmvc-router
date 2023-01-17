@@ -66,7 +66,7 @@ public class OpenApiRouteLoader {
         route.routesFile = resourceDesc;
         route.routesFileLine = -1;
         route.formats = getAcceptContentTypes(op);
-        route.staticArgs = getParms(op, components);
+        route.staticArgs = getParams(op, components);
         route.compute();
         if (logger.isDebugEnabled()) {
             logger.debug("Adding [{}] with params [{}] and headers [{}]", route, route.formats, route.staticArgs);
@@ -75,7 +75,7 @@ public class OpenApiRouteLoader {
         return route;
     }
 
-    private Map<String, String> getParms(Operation op, Components components) {
+    private Map<String, String> getParams(Operation op, Components components) {
         // we don't support static args
         return Collections.emptyMap();
     }
