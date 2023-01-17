@@ -82,6 +82,6 @@ public class OpenApiRouteLoader {
 
     private List<String> getAcceptContentTypes(Operation op) {
         if (op.getRequestBody() == null) return Collections.emptyList();
-        return op.getRequestBody().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).toList();
+        return op.getRequestBody().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).filter(Objects::nonNull).toList();
     }
 }

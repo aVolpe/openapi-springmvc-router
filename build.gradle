@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'py.com.volpe'
-version = '2.0.4'
+version = '2.0.5'
 description = 'springmvc-openapi-router'
 
 java.sourceCompatibility = JavaVersion.VERSION_17

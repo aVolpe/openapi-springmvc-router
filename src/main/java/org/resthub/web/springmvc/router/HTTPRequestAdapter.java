@@ -3,6 +3,7 @@ package org.resthub.web.springmvc.router;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -231,6 +232,10 @@ public class HTTPRequestAdapter {
 
         if (accept == null) {
             return null;
+        }
+
+        if (accept.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)) {
+            return "form";
         }
 
         if (accept.contains("application/xhtml")
