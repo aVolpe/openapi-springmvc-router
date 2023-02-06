@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+version = '2.0.5'
+
+dependencies {
+    implementation 'org.springframework:spring-aop'
+    implementation 'org.springframework:spring-core'
+    implementation 'org.springframework:spring-beans'
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'net.sourceforge.jregex:jregex:1.2_01'
+    implementation 'commons-io:commons-io'
+    implementation 'org.springframework.hateoas:spring-hateoas'
+    implementation 'io.swagger.core.v3:swagger-models'
+    implementation 'io.swagger.core.v3:swagger-core'
+    testImplementation 'org.springframework:spring-test'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'io.cucumber:cucumber-java'
+    testImplementation 'io.cucumber:cucumber-picocontainer'
+    testImplementation 'io.cucumber:cucumber-junit'
+    testImplementation 'junit:junit'
+    testImplementation 'org.springframework.security:spring-security-core'
+    testImplementation 'org.springframework.security:spring-security-config'
+    testImplementation 'org.springframework.security:spring-security-acl'
+    testImplementation 'org.springframework.security:spring-security-web'
+    testImplementation 'org.slf4j:slf4j-simple'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api'
+}

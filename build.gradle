@@ -6,97 +6,76 @@ plugins {
     id "com.jfrog.artifactory" version "4.29.0"
 }
 
-group = 'py.com.volpe'
-version = '2.0.5'
-description = 'springmvc-openapi-router'
+allprojects {
 
-java.sourceCompatibility = JavaVersion.VERSION_17
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
 
-dependencyManagement {
-    dependencies {
-        // spring
-        imports {
-            mavenBom 'org.springframework:spring-framework-bom:6.0.2'
-            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.0.0'
-            mavenBom 'io.cucumber:cucumber-bom:7.9.0'
+    group = 'py.com.volpe'
+    description = 'openapi-router'
 
+    repositories {
+        mavenLocal()
+        maven {
+            url = uri('https://repo.maven.apache.org/maven2/')
         }
-
-        dependencySet(group: 'io.swagger.core.v3', version: '2.2.4') {
-            entry 'swagger-models'
-            entry 'swagger-core'
-        }
-
-        dependency 'commons-io:commons-io:2.11.0'
+        mavenCentral()
     }
-}
 
-dependencies {
-    implementation 'org.springframework:spring-aop'
-    implementation 'org.springframework:spring-core'
-    implementation 'org.springframework:spring-beans'
-    implementation 'org.springframework:spring-webmvc'
-    implementation 'org.slf4j:slf4j-api'
-    implementation 'net.sourceforge.jregex:jregex:1.2_01'
-    implementation 'commons-io:commons-io'
-    implementation 'org.springframework.hateoas:spring-hateoas'
-    implementation 'io.swagger.core.v3:swagger-models'
-    implementation 'io.swagger.core.v3:swagger-core'
-    testImplementation 'org.springframework:spring-test'
-    testImplementation 'org.assertj:assertj-core'
-    testImplementation 'io.cucumber:cucumber-java'
-    testImplementation 'io.cucumber:cucumber-picocontainer'
-    testImplementation 'io.cucumber:cucumber-junit'
-    testImplementation 'junit:junit'
-    testImplementation 'org.springframework.security:spring-security-core'
-    testImplementation 'org.springframework.security:spring-security-config'
-    testImplementation 'org.springframework.security:spring-security-acl'
-    testImplementation 'org.springframework.security:spring-security-web'
-    testImplementation 'org.slf4j:slf4j-simple'
-    compileOnly 'jakarta.servlet:jakarta.servlet-api'
-    testImplementation 'jakarta.servlet:jakarta.servlet-api'
-}
+    dependencyManagement {
+        dependencies {
+            // spring
+            imports {
+                mavenBom 'org.springframework:spring-framework-bom:6.0.2'
+                mavenBom 'org.springframework.boot:spring-boot-dependencies:3.0.0'
+                mavenBom 'io.cucumber:cucumber-bom:7.9.0'
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from(components.java)
-        }
-    }
-}
+            }
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
+            dependencySet(group: 'io.swagger.core.v3', version: '2.2.4') {
+                entry 'swagger-models'
+                entry 'swagger-core'
+            }
 
-repositories {
-    mavenLocal()
-    maven {
-        url = uri('https://repo.maven.apache.org/maven2/')
-    }
-    mavenCentral()
-}
-
-artifactory {
-    contextUrl = "${artifactory_url}"
-
-    publish {
-        repository {
-            repoKey = 'libs-release-local'
-            username = "${artifactory_user}"
-            password = "${artifactory_password}"
-        }
-
-        defaults {
-            publications 'maven'
-            publishBuildInfo = true
-            publishArtifacts = true
-            publishPom = true
-            publishIvy = false
+            dependency 'commons-io:commons-io:2.11.0'
         }
     }
 
-    clientConfig.includeEnvVars = false
-    clientConfig.envVarsExcludePatterns = '*pwd*,*password*,*PWD*,*PASSWORD*,*Password,*secret*,*SECRET*,*key*,*KEY*,sonar.login'
-    clientConfig.info.buildNumber = version
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from(components.java)
+            }
+        }
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    artifactory {
+        contextUrl = "${artifactory_url}"
+
+        publish {
+            repository {
+                repoKey = 'libs-release-local'
+                username = "${artifactory_user}"
+                password = "${artifactory_password}"
+            }
+
+            defaults {
+                publications 'maven'
+                publishBuildInfo = true
+                publishArtifacts = true
+                publishPom = true
+                publishIvy = false
+            }
+        }
+
+        clientConfig.includeEnvVars = false
+        clientConfig.envVarsExcludePatterns = '*pwd*,*password*,*PWD*,*PASSWORD*,*Password,*secret*,*SECRET*,*key*,*KEY*,sonar.login'
+        clientConfig.info.buildNumber = version
+    }
 }
