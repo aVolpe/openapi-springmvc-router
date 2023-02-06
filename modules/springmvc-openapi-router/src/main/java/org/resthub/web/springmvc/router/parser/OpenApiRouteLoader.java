@@ -4,7 +4,7 @@ import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
-import org.resthub.web.springmvc.router.Router.Route;
+import org.resthub.web.springmvc.router.Route;
 import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +67,7 @@ public class OpenApiRouteLoader {
         route.routesFileLine = -1;
         route.formats = getAcceptContentTypes(op);
         route.staticArgs = getParams(op, components);
+        route.operation = op;
         route.compute();
         if (logger.isDebugEnabled()) {
             logger.debug("Adding [{}] with params [{}] and headers [{}]", route, route.formats, route.staticArgs);

@@ -1,9 +1,9 @@
 package org.resthub.web.springmvc.router.support;
 
-import java.lang.reflect.Method;
-import org.resthub.web.springmvc.router.Router;
-import org.resthub.web.springmvc.router.Router.Route;
+import org.resthub.web.springmvc.router.Route;
 import org.springframework.web.method.HandlerMethod;
+
+import java.lang.reflect.Method;
 
 /**
  * Bears the request mapping information to be handled by the RequestMappingHandlerAdapter
@@ -20,9 +20,9 @@ import org.springframework.web.method.HandlerMethod;
  */
 public class RouterHandler extends HandlerMethod {
  
-    private Router.Route route;
-    
-    public RouterHandler(Object bean, Method method, Router.Route route) {
+    private final Route route;
+
+    public RouterHandler(Object bean, Method method, Route route) {
         // calling the actual HandlerMethod constructor
         super(bean, method);
         this.route = route;

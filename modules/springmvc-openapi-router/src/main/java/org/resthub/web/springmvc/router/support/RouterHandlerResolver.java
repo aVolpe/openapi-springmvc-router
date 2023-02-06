@@ -1,7 +1,7 @@
 package org.resthub.web.springmvc.router.support;
 
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
-import org.resthub.web.springmvc.router.Router;
+import org.resthub.web.springmvc.router.Route;
 import org.resthub.web.springmvc.router.exceptions.ActionNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class RouterHandlerResolver {
      * @return HandlerMethod to be used by the RequestAdapter
      * @throws ActionNotFoundException
      */
-    public HandlerMethod resolveHandler(Router.Route route, String fullAction, HTTPRequestAdapter req) throws ActionNotFoundException {
+    public HandlerMethod resolveHandler(Route route, String fullAction, HTTPRequestAdapter req) throws ActionNotFoundException {
 
         HandlerMethod handlerMethod;
 
@@ -58,7 +58,7 @@ public class RouterHandlerResolver {
         return handlerMethod;
     }
 
-    private HandlerMethod doResolveHandler(Router.Route route, String fullAction) throws ActionNotFoundException {
+    private HandlerMethod doResolveHandler(Route route, String fullAction) throws ActionNotFoundException {
 
         Method actionMethod;
         Object controllerObject;

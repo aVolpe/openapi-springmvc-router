@@ -8,3 +8,5 @@ rootProject.name = 'openapi-router'
 
 
 include 'modules:springmvc-openapi-router'
+include 'modules:springboot-openapi-router'
+include 'modules:springweb-openapi-validator'

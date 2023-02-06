@@ -3,7 +3,7 @@ package org.resthub.web.springmvc.router.parser;
 import jregex.Matcher;
 import jregex.Pattern;
 import org.apache.commons.io.IOUtils;
-import org.resthub.web.springmvc.router.Router.Route;
+import org.resthub.web.springmvc.router.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;

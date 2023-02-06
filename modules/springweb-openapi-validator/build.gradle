@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+version = '2.0.0'
+
+dependencies {
+    implementation project(':modules:springmvc-openapi-router')
+    implementation 'org.springframework:spring-webmvc'
+
+    implementation 'com.mservicetech:openapi-schema-validation:2.0.0'
+    implementation 'com.networknt:json-schema-validator:1.0.76'
+    implementation 'com.networknt:json-overlay:2.1.6'
+
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+}
+
+test {
+    reports.junitXml.destination = file('build/test-results/')
+    useJUnitPlatform()
+}

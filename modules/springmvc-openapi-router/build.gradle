@@ -12,9 +12,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api'
     implementation 'net.sourceforge.jregex:jregex:1.2_01'
     implementation 'commons-io:commons-io'
-    implementation 'org.springframework.hateoas:spring-hateoas'
-    implementation 'io.swagger.core.v3:swagger-models'
-    implementation 'io.swagger.core.v3:swagger-core'
+    api 'io.swagger.core.v3:swagger-models'
+    api 'io.swagger.core.v3:swagger-core'
+
     testImplementation 'org.springframework:spring-test'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'io.cucumber:cucumber-java'
@@ -26,6 +26,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-acl'
     testImplementation 'org.springframework.security:spring-security-web'
     testImplementation 'org.slf4j:slf4j-simple'
-    compileOnly 'jakarta.servlet:jakarta.servlet-api'
     testImplementation 'jakarta.servlet:jakarta.servlet-api'
+
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
 }
