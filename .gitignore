@@ -16,3 +16,4 @@ build/
 local.properties
 out/
 target/
+modules/*/bin
