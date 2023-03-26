@@ -2,7 +2,6 @@ package org.resthub.web.springmvc.router.parser;
 
 import jregex.Matcher;
 import jregex.Pattern;
-import org.apache.commons.io.IOUtils;
 import org.resthub.web.springmvc.router.Router.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +9,7 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -24,9 +24,8 @@ public class ByLineRouterLoader {
     public List<Route> load(Resource resource) throws IOException {
 
         String fileAbsolutePath = resource.getURL().getPath();
-        String content = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
 
-        return parse(content, fileAbsolutePath);
+        return parse(convertStreamToString(resource.getInputStream()), fileAbsolutePath);
     }
 
     List<Route> parse(String content, String fileAbsolutePath) {
@@ -108,5 +107,10 @@ public class ByLineRouterLoader {
 
     public Route buildRoute(String method, String path, String action, String params, String headers) {
         return getRoute(method, path, action, params, headers);
+    }
+
+    static String convertStreamToString(java.io.InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
     }
 }

@@ -3,7 +3,6 @@ package org.resthub.web.springmvc.router;
 import jregex.Matcher;
 import jregex.Pattern;
 import jregex.REFlags;
-import org.apache.commons.io.FileUtils;
 import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
 import org.resthub.web.springmvc.router.exceptions.NoRouteFoundException;
 import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
@@ -16,6 +15,8 @@ import org.springframework.core.io.Resource;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,7 +119,7 @@ public class Router {
         boolean hasChanged = false;
 
         for (Resource res : fileResources) {
-            if (FileUtils.isFileNewer(res.getFile(), lastLoading)) {
+            if (Files.getLastModifiedTime(res.getFile().toPath()).compareTo(FileTime.fromMillis(lastLoading)) > 0) {
                 hasChanged = true;
                 break;
             }
