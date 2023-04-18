@@ -40,8 +40,8 @@ public class HandlersStepdefs {
 
     private String servletPath = "";
     private String contextPath = "";
-    private List<HTTPParam> queryParams = new ArrayList<HTTPParam>();
-    private List<HTTPHeader> headers = new ArrayList<HTTPHeader>();
+    private List<HTTPParam> queryParams = new ArrayList<>();
+    private List<HTTPHeader> headers = new ArrayList<>();
     private String body = null;
 
     private MockHttpServletRequest request;
@@ -214,6 +214,21 @@ public class HandlersStepdefs {
         I_send_the_HTTP_request(method, url);
     }
 
+    @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\" with request:$")
+    public void I_send_the_HTTP_request_with_request(String method, String url, DataTable headers) throws Throwable {
+
+        if (headers.asMap().containsKey("body"))
+            this.body = headers.asMap().get("body");
+        var asMap = headers.asMap();
+        this.headers = asMap
+                .keySet()
+                .stream()
+                .filter(h -> h.startsWith("header:"))
+                .map(k -> new HTTPHeader(k.substring(k.indexOf(":") + 1), asMap.get(k)))
+                .toList();
+        I_send_the_HTTP_request(method, url);
+    }
+
     @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\" with body:$")
     public void I_send_the_HTTP_request_with_body(String method, String url, DataTable body) throws Throwable {
 
@@ -288,7 +303,7 @@ public class HandlersStepdefs {
         }
 
         ha.handle(request, response, handler);
-        System.out.println(response.getContentAsString());
+        System.out.println(handler + " response: " + response.getContentAsString());
 
         assertThat(response.getStatus()).isEqualTo(status);
     }

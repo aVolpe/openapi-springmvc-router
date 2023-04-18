@@ -11,7 +11,16 @@ Feature: java config support with openapi
     When I send the HTTP request "GET" "/pets/1234"
     Then the server should send an HTTP response with status "200"
 
+    When I send the HTTP request "GET" "/pets/1234" with headers:
+      | Accept | */*  |
+    Then the server should send an HTTP response with status "200"
+
     When I send the HTTP request "POST" "/pets" with body:
       | name | HOMERO  |
       | kind | DOG     |
+    Then the server should send an HTTP response with status "201"
+
+    When I send the HTTP request "POST" "/pets" with request:
+      | body          | { "name": "HOMERON", "kind": "DOG" }  |
+      | header:accept | */*                                   |
     Then the server should send an HTTP response with status "201"
