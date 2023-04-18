@@ -84,7 +84,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a specific pet
+      operationId: myTestController.updatePetById
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/UpdatePet'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
+  requestBodies:
+    UpdatePet:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Pet'
   schemas:
     Pet:
       type: object

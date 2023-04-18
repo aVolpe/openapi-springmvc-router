@@ -24,3 +24,8 @@ Feature: java config support with openapi
       | body          | { "name": "HOMERON", "kind": "DOG" }  |
       | header:accept | */*                                   |
     Then the server should send an HTTP response with status "201"
+
+    When I send the HTTP request "PUT" "/pets/1234" with request:
+      | body          | { "name": "HOMERON", "kind": "DOG" }  |
+      | header:accept | */*                                   |
+    Then the server should send an HTTP response with status "200"

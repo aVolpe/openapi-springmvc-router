@@ -68,4 +68,9 @@ public class MyTestController {
     public Map<String, String> showPetById(@PathVariable("petId") String id) {
         return Collections.singletonMap("name", id);
     }
+
+    @ResponseBody
+    public Map<String, String> updatePetById(@PathVariable("petId") String id, @RequestBody Object body) {
+        return Map.of("id", id, "data", body.toString());
+    }
 }
