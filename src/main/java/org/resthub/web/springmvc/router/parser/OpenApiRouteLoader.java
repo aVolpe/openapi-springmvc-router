@@ -9,6 +9,7 @@ import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class OpenApiRouteLoader {
         return Collections.emptyMap();
     }
 
-    private List<String> getAcceptContentTypes(Operation op) {
+    private List<MediaType> getAcceptContentTypes(Operation op) {
         if (op.getRequestBody() == null) return Collections.emptyList();
         return op.getRequestBody().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).filter(Objects::nonNull).toList();
     }

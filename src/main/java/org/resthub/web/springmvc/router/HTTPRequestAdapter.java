@@ -86,7 +86,7 @@ public class HTTPRequestAdapter {
     /**
      * Format (html,xml,json,text)
      */
-    public String format = null;
+    public MediaType format = null;
     /**
      * Full action (ex: Application.index)
      */
@@ -117,7 +117,7 @@ public class HTTPRequestAdapter {
         this.headers = new HashMap<String, Header>();
     }
 
-    public void setFormat(String _format) {
+    public void setFormat(MediaType _format) {
 
         this.format = _format;
     }
@@ -228,37 +228,37 @@ public class HTTPRequestAdapter {
      * Automatically resolve request format from the Accept header (in this
      * order : html > xml > json > text)
      */
-    public static String resolveFormat(String accept) {
+    public static MediaType resolveFormat(String accept) {
 
-        if (accept == null) {
-            return null;
+        if (accept == null || "*/*".equalsIgnoreCase(accept)) {
+            return MediaType.ALL;
         }
 
         if (accept.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)) {
-            return "form";
+            return MediaType.APPLICATION_FORM_URLENCODED;
         }
 
         if (accept.contains("application/xhtml")
                 || accept.contains("text/html")
                 || accept.startsWith("*/*")) {
-            return "html";
+            return MediaType.TEXT_HTML;
         }
 
         if (accept.contains("application/xml")
                 || accept.contains("text/xml")) {
-            return "xml";
+            return MediaType.APPLICATION_XML;
         }
 
         if (accept.contains("text/plain")) {
-            return "txt";
+            return MediaType.TEXT_PLAIN;
         }
 
         if (accept.contains("application/json")
                 || accept.contains("text/javascript")) {
-            return "json";
+            return MediaType.APPLICATION_JSON;
         }
 
-        return null;
+        return MediaType.ALL;
     }
 
     public static class Header {

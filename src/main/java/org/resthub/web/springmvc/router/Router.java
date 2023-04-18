@@ -11,6 +11,7 @@ import org.resthub.web.springmvc.router.parser.OpenApiRouteLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -148,7 +149,7 @@ public class Router {
         }
 
         for (Route route : routes) {
-            String format = request.format;
+            MediaType format = request.format;
             String host = request.host;
             String path = request.contextPath != null ? request.path.replace(request.contextPath, "") : request.path;
             Map<String, String> args = route.matches(request.method, path, format, host);
@@ -157,7 +158,7 @@ public class Router {
                 request.routeArgs = args;
                 request.action = route.action;
                 if (args.containsKey("format")) {
-                    request.setFormat(args.get("format"));
+                    request.setFormat(HTTPRequestAdapter.resolveFormat(args.get("format")));
                 }
                 if (request.action.contains("{")) {
                     for (String arg : request.routeArgs.keySet()) {
@@ -181,13 +182,13 @@ public class Router {
         return route(method, path, null, null);
     }
 
-    public static Map<String, String> route(String method, String path, String headers) {
-        return route(method, path, headers, null);
+    public static Map<String, String> route(String method, String path, MediaType accept) {
+        return route(method, path, accept, null);
     }
 
-    public static Map<String, String> route(String method, String path, String headers, String host) {
+    public static Map<String, String> route(String method, String path, MediaType accept, String host) {
         for (Route route : routes) {
-            Map<String, String> args = route.matches(method, path, headers, host);
+            Map<String, String> args = route.matches(method, path, accept, host);
             if (args != null) {
                 args.put("action", route.action);
                 return args;
@@ -212,7 +213,7 @@ public class Router {
 
     public static Collection<Route> resolveActions(String action) {
 
-        List<Route> candidateRoutes = new ArrayList<Route>(3);
+        List<Route> candidateRoutes = new ArrayList<>(3);
 
         for (Route route : routes) {
             if (route.actionPattern != null) {
@@ -488,7 +489,7 @@ public class Router {
         Pattern hostPattern;
         List<Arg> args = new ArrayList<Arg>(3);
         public Map<String, String> staticArgs = new HashMap<String, String>(3);
-        public List<String> formats = new ArrayList<>(1);
+        public List<MediaType> formats = new ArrayList<>(1);
         String host;
         Arg hostArg = null;
         public int routesFileLine;
@@ -566,27 +567,20 @@ public class Router {
 
         // TODO: Add args names
 
-        private boolean contains(String accept) {
-            boolean contains = (accept == null);
-            if (accept != null) {
-                if (this.formats.isEmpty()) {
-                    return true;
-                }
-                for (String format : this.formats) {
-                    contains = format.startsWith(accept);
-                    if (contains) {
-                        break;
-                    }
-                }
+        private boolean contains(MediaType accept) {
+            if (accept != null && !this.formats.isEmpty()) {
+                for (MediaType mt: this.formats)
+                    if (accept.includes(mt)) return true;
+                return false;
             }
-            return contains;
+            return true;
         }
 
         public Map<String, String> matches(String method, String path) {
             return matches(method, path, null, null);
         }
 
-        public Map<String, String> matches(String method, String path, String accept) {
+        public Map<String, String> matches(String method, String path, MediaType accept) {
             return matches(method, path, accept, null);
         }
 
@@ -600,7 +594,7 @@ public class Router {
          * @param domain the domain.
          * @return ???
          */
-        public Map<String, String> matches(String method, String path, String accept, String domain) {
+        public Map<String, String> matches(String method, String path, MediaType accept, String domain) {
             // If method is HEAD and we have a GET
             if (method == null || this.method.equals("*") || method.equalsIgnoreCase(this.method) || (method.equalsIgnoreCase("head") && ("get").equalsIgnoreCase(this.method))) {
 
@@ -657,7 +651,7 @@ public class Router {
         }
 
         public String toFixedLengthString() {
-            return String.format("%-8s%-50s%-25s", method, path, action);
+            return String.format("%-8s%-50s%-50s%-25s", method, path, action, MediaType.toString(this.formats));
         }
     }
 

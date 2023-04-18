@@ -2,10 +2,12 @@ package org.resthub.web.springmvc.router.parser;
 
 import jregex.Matcher;
 import jregex.Pattern;
+import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.util.*;
@@ -72,14 +74,12 @@ public class ByLineRouterLoader {
         return route;
     }
 
-    public List<String> getAcceptContentTypes(String params) {
-        List<String> toRet = new ArrayList<>();
+    public List<MediaType> getAcceptContentTypes(String params) {
         if (params == null || params.length() < 1) {
-            return toRet;
+            return Collections.emptyList();
         }
         params = params.trim();
-        toRet.addAll(Arrays.asList(params.split(",")));
-        return toRet;
+        return Arrays.stream(params.split(",")).map(HTTPRequestAdapter::resolveFormat).toList();
     }
 
     public Map<String, String> getParms(String params) {
