@@ -66,7 +66,7 @@ public class OpenApiRouteLoader {
         route.action = Optional.ofNullable(op.getExtensions()).map(e -> e.get("x-action")).map(Objects::toString).orElse(op.getOperationId());
         route.routesFile = resourceDesc;
         route.routesFileLine = -1;
-        route.formats = getAcceptContentTypes(op);
+        route.formats = getAcceptContentTypes(route, op, components);
         route.staticArgs = getParams(op, components);
         route.compute();
         if (logger.isDebugEnabled()) {
@@ -81,8 +81,36 @@ public class OpenApiRouteLoader {
         return Collections.emptyMap();
     }
 
-    private List<MediaType> getAcceptContentTypes(Operation op) {
+    private List<MediaType> getAcceptContentTypes(Route route, Operation op, Components components) {
         if (op.getRequestBody() == null) return Collections.emptyList();
+        if (op.getRequestBody().get$ref() != null) {
+            var schemeRef = op.getRequestBody().get$ref();
+            if (schemeRef.startsWith("#/components/requestBodies"))
+                for (var schemeDef : components.getRequestBodies().entrySet()) {
+                    if (schemeRef.endsWith("/" + schemeDef.getKey()))
+                        return schemeDef.getValue().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).filter(Objects::nonNull).toList();
+                }
+            throw new OpenApiBuilderException(route, "Has ref, but the ref wasn't found in request bodies %s".formatted(schemeRef));
+        }
         return op.getRequestBody().getContent().keySet().stream().map(HTTPRequestAdapter::resolveFormat).filter(Objects::nonNull).toList();
+    }
+
+    public static class OpenApiBuilderException extends RuntimeException {
+        public OpenApiBuilderException(Route route, String description) {
+            this(route, description, null);
+        }
+
+        public OpenApiBuilderException(Route route, String description, Throwable nested) {
+            super(String.format("%s - building route: %s %s", description, route.getMethod(), route.getPath()), nested);
+        }
+
+        public OpenApiBuilderException(String detail) {
+            super(detail);
+        }
+
+        public OpenApiBuilderException(String detail, Throwable nested) {
+            super(detail, nested);
+        }
+
     }
 }
