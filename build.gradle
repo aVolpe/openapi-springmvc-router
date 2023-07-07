@@ -40,6 +40,7 @@ dependencies {
     implementation 'org.springframework.hateoas:spring-hateoas'
     implementation 'io.swagger.core.v3:swagger-models'
     implementation 'io.swagger.core.v3:swagger-core'
+    implementation 'io.swagger.parser.v3:swagger-parser-v3:2.1.16'
     testImplementation 'org.springframework:spring-test'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'io.cucumber:cucumber-java'

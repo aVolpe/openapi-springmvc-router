@@ -1,8 +1,9 @@
 package org.resthub.web.springmvc.router.parser;
 
-import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router.Route;
 import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
@@ -26,10 +27,13 @@ public class OpenApiRouteLoader {
 
     public List<Route> load(Resource data) {
 
-        try (InputStream fis = data.getInputStream()) {
-            OpenAPI loaded = Yaml.mapper().readValue(
-                    fis,
-                    OpenAPI.class
+        try (InputStream ignored = data.getInputStream()) {
+            ParseOptions parseOptions = new ParseOptions();
+            parseOptions.setResolveFully(true);
+            OpenAPI loaded = new OpenAPIV3Parser().read(
+                    data.getURL().toString(),
+                    null,
+                    parseOptions
             );
             List<Route> toRet = new ArrayList<>(loaded.getPaths().size() * 2);
 
