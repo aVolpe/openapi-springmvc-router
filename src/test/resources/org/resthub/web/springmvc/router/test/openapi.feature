@@ -30,7 +30,7 @@ Feature: java config support with openapi
       | header:accept | */*                                   |
     Then the server should send an HTTP response with status "200"
 
-    When I send the HTTP request "POST" "/pets" with body:
+    When I send the HTTP request "POST" "/pet" with body:
       | name | Test alias  |
       | kind | DOG         |
     Then the server should send an HTTP response with status "201"
