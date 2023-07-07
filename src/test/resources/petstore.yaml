@@ -7,6 +7,8 @@ info:
 servers:
   - url: http://petstore.swagger.io/v1
 paths:
+  /pet:
+    $ref: '#/paths/~1pets'
   /pets:
     get:
       summary: List all pets

@@ -651,7 +651,7 @@ public class Router {
         }
 
         public String toFixedLengthString() {
-            return String.format("%-8s%-50s%-50s%-25s", method, path, action, MediaType.toString(this.formats));
+            return String.format("%-8s%-60s%-60s%-22s", method, path, action, MediaType.toString(this.formats));
         }
     }
 
