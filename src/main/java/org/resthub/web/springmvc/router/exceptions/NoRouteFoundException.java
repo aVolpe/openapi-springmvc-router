@@ -7,8 +7,8 @@ package org.resthub.web.springmvc.router.exceptions;
  */
 public class NoRouteFoundException extends RuntimeException {
 
-    public String method;
-    public String path;
+    public final String method;
+    public final String path;
 
     public NoRouteFoundException(String method, String path) {
         super("No route found");
@@ -16,6 +16,7 @@ public class NoRouteFoundException extends RuntimeException {
         this.path = path;
     }
 
+    @Override
     public String toString() {
 
         return this.getMessage() + " method[" + this.method + "] path[" + this.path + "]";

@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class RouterHandlerResolver {
 
-    private Map<String, Object> cachedControllers = new LinkedHashMap<>();
+    private final Map<String, Object> cachedControllers = new LinkedHashMap<>();
 
     private final Map<String, HandlerMethod> cachedHandlers = new LinkedHashMap<>();
 

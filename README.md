@@ -1,326 +1,76 @@
-SpringMVC Router
-================
+# OpenAPI Router for Spring MVC
 
-[![Build Status](https://secure.travis-ci.org/resthub/springmvc-router.png?branch=master)](http://travis-ci.org/resthub/springmvc-router)
+[![Release](https://jitpack.io/v/avolpe/openapi-springmvc-router.svg)](https://jitpack.io/#avolpe/openapi-springmvc-router)
 
-Developers mailing list: resthub-dev@googlegroups.com
+This module allows you to define the routes for your Spring MVC application using an OpenAPI definition. It parses the OpenAPI documentation and uses the `operationId` to map to a controller operation. This provides a centralized way to manage your routes and makes it easier to refactor URLs.
 
-Route mapping with SpringMVC Router
------------------------------------
+## Usage
 
-Spring MVC 4 [handles requests mapping](http://docs.spring.io/spring/docs/4.0.x/spring-framework-reference/html/mvc.html)
-with `RequestMappingHandlerMapping` and `RequestMappingHandlerAdapter` beans (that's the "out-of-the-box" configuration that comes with your springmvc application).
+### Add the Dependency
 
-But you may want to use a request Router for your application:
+First, you need to add the dependency to your project. If you're using Gradle, add the following to your `build.gradle` file:
 
-* Route Configuration is centralized in one place (you don't need to look into your controllers anymore) 
-* URL Refactoring is easier
-* Many web frameworks  use that system (Rails, PlayFramework and many others)
-* Handles routes priority 
-
-
-Define your application routes like this!
-
-    GET     /user/?                 userController.listAll
-    GET     /user/{<[0-9]+>id}      userController.showUser
-    DELETE  /user/{<[0-9]+>id}      userController.deleteUser
-    POST    /user/add/?             userController.createUser
-
-
-Configuring the SpringMVC Router for your project
--------------------------------------------------
-
-### Add the dependency to your maven pom.xml
-
-Warning: **this project is currently tested on Spring 4.0.x**, should work on 3.2.x
-but is not compatible with Spring 3.0.x.
-
-Your project needs these dependencies
-(Hint: the [new "Bill of materials"](http://docs.spring.io/spring/docs/4.0.x/spring-framework-reference/html/overview.html#overview-maven-bom))
-is really handy:
-
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-framework-bom</artifactId>
-                <version>4.0.2.RELEASE</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <dependencies>
+```groovy
+repositories {
     ...
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-aop</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-beans</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-webmvc</artifactId>
-      </dependency>
-    ...
-      <dependency>
-        <groupId>org.resthub</groupId>
-        <artifactId>springmvc-router</artifactId>
-        <version>1.2.0</version>
-      </dependency>
-    ...
-    </dependencies>
+    maven { url "https://jitpack.io" }
+}
 
-If you want to use SNAPSHOTs, add oss.sonatype.org as a repository.
+dependencies {
+    implementation 'com.github.avolpe:openapi-springmvc-router:2.1.0'
+}
+```
 
-    <repositories>
-      <repository>
-        <id>sonatype.oss.snapshots</id>
-          <name>Sonatype OSS Snapshot Repository</name>
-          <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-      </repository> 
-    </repositories>
+If you're using Maven, add this to your `pom.xml`:
 
+```xml
+<dependencies>
+    <dependency>
+        <groupId>com.github.avolpe</groupId>
+        <artifactId>openapi-springmvc-router</artifactId>
+        <version>2.1.0</version>
+    </dependency>
+</dependencies>
+```
 
-### Add the Router to your Spring MVC configuration
+### Configuration
 
-In your *-servlet.xml file, add the following beans:
+To configure this module, add a new `@Configuration` class:
 
+```java
+@Configuration
+public class OpenApiWebAppConfig extends RouterConfigurationSupport {
 
-     <?xml version="1.0" encoding="UTF-8"?>
-     <beans  xmlns="http://www.springframework.org/schema/beans"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns:context="http://www.springframework.org/schema/context"
-         xsi:schemaLocation="http://www.springframework.org/schema/beans
-             http://www.springframework.org/schema/beans/spring-beans.xsd
-             http://www.springframework.org/schema/context
-             http://www.springframework.org/schema/context/spring-context.xsd">
-    
-        <!--
-          Enable bean declaration by annotations, update base package according to your project
-        -->
-        <context:annotation-config/>
-    
-    	<!--
-    		Package to scan for Controllers.
-    		All Controllers with @Controller annotation are loaded as such.
-    	-->
-    	<context:component-scan base-package="com.example.yourproject.controllers" />
-    
-    	<!-- 
-    		Choose HandlerMapping.
-    		RouterHandlerMapping loads routes configuration from a file.
-    		Router adapted from Play! Framework.
-    		
-    		@see http://www.playframework.org/documentation/1.2.4/routes#syntax
-    		for route configuration syntax.
-    		Example:
-    		GET    /home          PageController.showPage(id:'home')
-    		GET    /page/{id}     PageController.showPage
-    	-->		 
-    	<bean id="handlerMapping"
-              class="org.resthub.web.springmvc.router.RouterHandlerMapping">
-                <property name="routeFiles">
-                    <list>
-                        <value>routes.conf</value>
-                    <!--
-                        Router will *append* routes declared in additional files
-                        <value>addroutes.conf</value>
-                    -->
-                    </list>
-                </property>
-
-                <!-- 
-                    Uncomment the following configuration line
-                    if you want routes to be dynamically reloaded when
-                    route files are modified.
-                    Can be a good idea in dev mode, not so much in production!
-                -->
-                <!-- <property name="autoReloadEnabled" value="true" /> -->
-        </bean>
-    
-    </beans>
-
-Or you can achieve the same thing with a Javaconfig class like this:
-
-    @Configuration
-    @ComponentScan(basePackages = "com.example.yourproject.controllers")
-    // You should not use the @EnableWebMvc annotation
-    public class WebAppConfig extends RouterConfigurationSupport {
-
-      @Override
-      public List<String> listRouteFiles() {
-
-        List<String> routeFiles = new ArrayList<String>();
-        routeFiles.add("routes.conf");
-        return routeFiles;
-      }
-    }    
-
-### Create your route configuration file
-
-
-The example above will load the configuration file using Spring ResourceLoader - so create a new file in your project `src/main/resources/routes.conf`.
-
-Routes configuration
---------------------
-
-The router maps HTTP request to a specific action (i.e. a public method of a Controller class handling requests).
-
-### Get your first Controller ready!
-
-Controllers can use [Spring MVC annotations and conventions](http://static.springsource.org/spring/docs/3.2.x/spring-framework-reference/html/mvc.html) - only the `@RequestMapping` annotation is useless.
-
-
-    @Controller
-    public class HelloController {
-      public void simpleAction() {
-      
-      }
-    	
-      public @ResponseBody String sayHelloTo(@PathVariable(value = "name") String name) {
-        return "Hello "+name+" !";	  
-      }
+    @Override
+    public List<String> listRouteFiles() {
+        return List.of("classpath:petstore.yaml");
     }
+}
+```
 
+### Example Code
 
+Here's an example of how you can use this module in your Spring MVC application:
 
-### Edit your route configuration file
+```yaml
+paths:
+  /pets:
+    get:
+      operationId: myController.listPets
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+```
 
-**Warning: in the route configuration file, Controller names are case sensitive, and should always start with a lower case letter.**
+```java
+@Controller
+public class MyController {
 
-
-    # this is a comment
-    
-    GET     /simpleaction                  helloController.simpleAction
-    GET     /hello/{<[a-zA-Z]+>name}       helloController.sayHelloTo
-
-
-For more details on routes syntax, [check out the PlayFramework documentation](http://www.playframework.org/documentation/1.2.4/routes).
-
-
-View Integration
-----------------
-
-Routing requests to actions is one thing. But refactoring routes can be a real pain if all your URLs are hard coded in your template views. Reverse routing is the solution.
-
-
-### Reverse Routing
-
-Example route file:
-
-    GET     /user/?                 userController.listAll
-    GET     /user/{<[0-9]+>id}      userController.showUser
-    DELETE  /user/{<[0-9]+>id}      userController.deleteUser
-    POST    /user/add/?             userController.createUser
-
-
-Reverse routing in your Java class:
-
-    import org.resthub.web.springmvc.router.Router;
-    
-    public class MyClass {
-      public void myMethod() {
-        
-        ActionDefinition action = Router.reverse("userController.listAll");
-        // logs "/user/"
-        logger.info(action.url);
-    
-        HashMap<String, Object> args = new HashMap<String, Object>();
-        args.put("id",42L);
-        ActionDefinition otherAction = Router.reverse("userController.showUser", args);
-        // logs "/user/42"
-        logger.info(otherAction.url);
-      }
+    public List<Pet> listPets() {
+        // Your code here
     }
-
-
-### Integrating with Velocity
-
-First, add the RouteDirective to your Velocity Engine configuration:
-
-    <!--
-      Configure your Velocity Template engine.
-      Add the custom directive to the engine.  
-    -->
-    <bean id="velocityConfig"
-      class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
-      <property name="resourceLoaderPath" value="classpath:velocity" />
-      <property name="preferFileSystemAccess" value="false"/>
-      <property name="velocityProperties">
-        <props>
-          <prop key="userdirective">org.resthub.web.springmvc.view.velocity.RouteDirective</prop>
-        </props>
-      </property>
-    </bean>
-
-Then use the #route directive within your .vm file:
-
-    <a href="#route("userController.listAll")">List all users</a>
-    <a href="#route("userController.showUser(id:'42')")">Show user 42</a>
-
-### Integrating with FreeMarker
-
-In your Spring MVC context add the following:
-
-    <mvc:interceptors>
-        <bean class="org.resthub.web.springmvc.view.freemarker.RouterModelAttribute"/>
-    </mvc:interceptors>
-
-This will inject a model attribute called "route" to every model. The attribute name can be modified by setting the
-property "attributeName".
-
-    <mvc:interceptors>
-        <bean class="org.resthub.web.springmvc.view.freemarker.RouterModelAttribute">
-            <property name="attributeName" value="myAttributeName"/>
-        </bean>
-    </mvc:interceptors>
-
-Then use the Router instance within your .ftl files:
-
-    <a href="${route.reverse('userController.listAll')}">List all users</a>
-
-    <#assign params = {"id":42}/>
-    <a href="${route.reverse('userController.showUser', params)}">Show user 42</a>
-
-### Integrating with JSP
-
-In your JSP, declare the taglib:
-
-    <%@ taglib prefix="route" uri="/springmvc-router" %>
-
-Then use the ```reverse``` method to generate URLs:
-
-    <a href="<route:reverse action="userController.listAll" />">List all users</a>
-    
-Dynamic parameters can also be used:
-
-	<a href="<route:reverse action="userController.showUser" userId="42" />">Show user 42</a>
-	
-	
-Spring HATEOAS support
-----------------------
-
-SpringMVC Router has its own [LinkBuilder implementation](https://github.com/resthub/springmvc-router/blob/master/src/main/java/org/resthub/web/springmvc/router/hateoas/RouterLinkBuilder.java) to work with [Spring HATEOAS](https://github.com/SpringSource/spring-hateoas).
-
-
-Tools
------
-
-### Autocomplete reverse routing in your IDE
-
-[springmvc-router-ide](https://github.com/bradhouse/springmvc-router-ide) is a Maven plugin to generate template files that assist IDEs in autocompleting reverse routing with this project.
-
-### RESThub framework
-
-This project can be used as an addon to [RESThub framework](http://resthub.org/).
+}
+```
