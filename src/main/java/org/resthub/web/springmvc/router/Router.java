@@ -32,11 +32,6 @@ import java.util.stream.Collectors;
 public class Router {
 
     /**
-     * Pattern used to locate a method override instruction
-     */
-    static Pattern methodOverride = new Pattern("^.*x-http-method-override=({method}GET|PUT|POST|DELETE|PATCH).*$");
-
-    /**
      * Timestamp the routes file was last loaded at.
      */
     public static long lastLoading = -1;
@@ -137,16 +132,6 @@ public class Router {
         if (logger.isTraceEnabled()) {
             logger.trace("Route: {} - {}", request.path, request.querystring);
         }
-        // request method may be overridden if a x-http-method-override parameter is given
-        if (request.querystring != null && methodOverride.matches(request.querystring)) {
-            Matcher matcher = methodOverride.matcher(request.querystring);
-            if (matcher.matches()) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("request method {} overridden to {} ", request.method, matcher.group("method"));
-                }
-                request.method = matcher.group("method");
-            }
-        }
 
         for (Route route : routes) {
             MediaType format = request.format;
@@ -209,22 +194,6 @@ public class Router {
     public static String getFullUrl(String action) {
         // Note the map is not <code>Collections.EMPTY_MAP</code> because it will be copied and changed.
         return getFullUrl(action, new HashMap<>(16));
-    }
-
-    public static Collection<Route> resolveActions(String action) {
-
-        List<Route> candidateRoutes = new ArrayList<>(3);
-
-        for (Route route : routes) {
-            if (route.actionPattern != null) {
-                Matcher matcher = route.actionPattern.matcher(action);
-                if (matcher.matches()) {
-                    candidateRoutes.add(route);
-                }
-            }
-        }
-
-        return candidateRoutes;
     }
 
     public static ActionDefinition reverse(String action, Map<String, Object> args) {
@@ -569,7 +538,7 @@ public class Router {
 
         private boolean contains(MediaType accept) {
             if (accept != null && !this.formats.isEmpty()) {
-                for (MediaType mt: this.formats)
+                for (MediaType mt : this.formats)
                     if (accept.includes(mt)) return true;
                 return false;
             }

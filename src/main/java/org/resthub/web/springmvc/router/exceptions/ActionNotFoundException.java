@@ -3,7 +3,7 @@ package org.resthub.web.springmvc.router.exceptions;
 
 public class ActionNotFoundException extends Exception {
 
-	    private String action;
+	    private final String action;
 	   
 	    public ActionNotFoundException(String action, Throwable cause) {
 	        super(String.format("Action %s not found", action), cause);

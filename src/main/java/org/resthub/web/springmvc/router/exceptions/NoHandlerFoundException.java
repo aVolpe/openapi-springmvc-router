@@ -4,20 +4,21 @@ import java.util.Map;
 
 /**
  * Exception: No handler found (during routing)
+ *
  * @author Brian Clozel
  * @see org.resthub.web.springmvc.router.Router
  */
 public class NoHandlerFoundException extends RuntimeException {
 
-    String action;
-    Map<String, Object> args;
+    private final String action;
+    private final Map<String, Object> args;
 
     public NoHandlerFoundException(String action, Map<String, Object> args) {
         super("No handler found");
         this.action = action;
         this.args = args;
-    } 
-    
+    }
+
     public String getAction() {
         return action;
     }
@@ -25,10 +26,11 @@ public class NoHandlerFoundException extends RuntimeException {
     public Map<String, Object> getArgs() {
         return args;
     }
-    
+
+    @Override
     public String toString() {
-    	
-    	return this.getMessage()+" action["+this.action+"] args["+this.args+"]";
+
+        return this.getMessage() + " action[" + this.action + "] args[" + this.args + "]";
     }
 
 
