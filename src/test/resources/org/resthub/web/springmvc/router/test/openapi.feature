@@ -34,3 +34,8 @@ Feature: java config support with openapi
       | name | Test alias  |
       | kind | DOG         |
     Then the server should send an HTTP response with status "201"
+
+    When I send the HTTP request "POST" "/pet_form_post" with body content "application/x-www-form-urlencoded" and expect "application/json" with body:
+      | name | Homero  |
+      | id   | homer   |
+    Then the server should send an HTTP response with status "201"

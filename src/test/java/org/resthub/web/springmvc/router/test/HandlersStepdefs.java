@@ -43,6 +43,7 @@ public class HandlersStepdefs {
     private List<HTTPParam> queryParams = new ArrayList<>();
     private List<HTTPHeader> headers = new ArrayList<>();
     private String body = null;
+    private Map<String, String> requestParams = Map.of();
 
     private MockHttpServletRequest request;
 
@@ -135,11 +136,11 @@ public class HandlersStepdefs {
     public void I_send_the_HTTP_request(String method, String url) throws Throwable {
 
         int pathLength = 0;
-        if (this.contextPath.length() > 0) {
+        if (!this.contextPath.isEmpty()) {
             pathLength += this.contextPath.length();
         }
 
-        if (this.servletPath.length() > 0) {
+        if (!this.servletPath.isEmpty()) {
             pathLength += this.servletPath.length();
         }
 
@@ -160,8 +161,17 @@ public class HandlersStepdefs {
         }
 
         if (body != null) {
-            request.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            if (request.getHeader(HttpHeaders.CONTENT_TYPE) == null) {
+                // by default json
+                request.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            }
             request.setContent(body.getBytes(StandardCharsets.UTF_8));
+        }
+        if (!requestParams.isEmpty()) {
+            assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE))
+                    .withFailMessage("RequestParams is only available for application/x-www-form-urlencoded, given was %s", request.getContentType())
+                    .isEqualTo(MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+            requestParams.forEach((k, v) -> request.setParameter(k, v));
         }
 
         request.setPathInfo(url.substring(pathLength));
@@ -233,6 +243,14 @@ public class HandlersStepdefs {
     public void I_send_the_HTTP_request_with_body(String method, String url, DataTable body) throws Throwable {
 
         this.body = Json.pretty(body.asMap());
+        I_send_the_HTTP_request(method, url);
+    }
+
+    @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\" with body content \"([^\"]*)\" and expect \"([^\"]*)\" with body:$")
+    public void I_send_the_HTTP_request_with_body(String method, String url, String contentType, String accept, DataTable body) throws Throwable {
+
+        this.requestParams = body.asMap();
+        this.headers = List.of(new HTTPHeader(HttpHeaders.ACCEPT, accept), new HTTPHeader(HttpHeaders.CONTENT_TYPE, contentType));
         I_send_the_HTTP_request(method, url);
     }
 

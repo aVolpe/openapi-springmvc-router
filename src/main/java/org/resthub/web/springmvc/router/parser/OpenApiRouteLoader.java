@@ -70,11 +70,12 @@ public class OpenApiRouteLoader {
         route.action = Optional.ofNullable(op.getExtensions()).map(e -> e.get("x-action")).map(Objects::toString).orElse(op.getOperationId());
         route.routesFile = resourceDesc;
         route.routesFileLine = -1;
-        route.formats = getAcceptContentTypes(route, op, components);
+        route.accepts = getAcceptContentTypes(route, op, components);
+        route.contentType = getContentType(route, op, components);
         route.staticArgs = getParams(op, components);
         route.compute();
         if (logger.isDebugEnabled()) {
-            logger.debug("Adding [{}] with params [{}] and headers [{}]", route, route.formats, route.staticArgs);
+            logger.debug("Adding [{}] with params [{}] and headers [{}]", route, route.accepts, route.staticArgs);
         }
 
         return route;
@@ -86,6 +87,11 @@ public class OpenApiRouteLoader {
     }
 
     private List<MediaType> getAcceptContentTypes(Route route, Operation op, Components components) {
+        // TODO check how to get the accepts (it should iterate all responses?)
+        return List.of(MediaType.ALL);
+    }
+
+    private List<MediaType> getContentType(Route route, Operation op, Components components) {
         if (op.getRequestBody() == null) return Collections.emptyList();
         if (op.getRequestBody().get$ref() != null) {
             var schemeRef = op.getRequestBody().get$ref();
