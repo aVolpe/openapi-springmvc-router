@@ -3,10 +3,7 @@ package org.resthub.web.springmvc.router.controllers;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -58,10 +55,19 @@ public class MyTestController {
         return Arrays.asList("DOG", "CAT");
     }
 
+    @RequestMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> createPet(@RequestBody Object body) throws URISyntaxException {
         return ResponseEntity.created(new URI("/"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Collections.singletonMap("data", body.toString()));
+    }
+
+    @RequestMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Map<String, String>> postPetForm(@RequestParam("name") String name, @RequestParam("id") String id) throws URISyntaxException {
+
+        return ResponseEntity.created(new URI("/"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Collections.singletonMap("data", name + ":" + id));
     }
 
     @ResponseBody

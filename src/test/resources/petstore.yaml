@@ -113,6 +113,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /pet_form_post:
+    post:
+      operationId: myTestController.postPetForm
+      responses:
+        '200':
+          description: Token granted
+          content:
+            application/json:
+              schema:
+                type: object
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                id:
+                  type: string
+              required:
+                - name
+                - id
 components:
   requestBodies:
     UpdatePet:

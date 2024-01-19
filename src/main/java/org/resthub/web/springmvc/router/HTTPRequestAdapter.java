@@ -60,10 +60,6 @@ public class HTTPRequestAdapter {
      */
     public String remoteAddress;
     /**
-     * Request content-type
-     */
-    public String contentType;
-    /**
      * Controller to invoke
      */
     public String controller;
@@ -86,7 +82,11 @@ public class HTTPRequestAdapter {
     /**
      * Format (html,xml,json,text)
      */
-    public MediaType format = null;
+    public MediaType accept = null;
+    /**
+     * Request content-type
+     */
+    public MediaType contentType = null;
     /**
      * Full action (ex: Application.index)
      */
@@ -117,9 +117,9 @@ public class HTTPRequestAdapter {
         this.headers = new HashMap<String, Header>();
     }
 
-    public void setFormat(MediaType _format) {
+    public void setAccept(MediaType _format) {
 
-        this.format = _format;
+        this.accept = _format;
     }
 
     public boolean isSecure() {
@@ -130,11 +130,11 @@ public class HTTPRequestAdapter {
         this.secure = secure;
     }
 
-    public String getContentType() {
+    public MediaType getContentType() {
         return contentType;
     }
 
-    public void setContentType(String contentType) {
+    public void setContentType(MediaType contentType) {
         this.contentType = contentType;
     }
 
@@ -174,9 +174,9 @@ public class HTTPRequestAdapter {
         logger.trace("request.path: {}, request.queryString: {}", request.path, request.getQueryString());
 
         if (httpServletRequest.getHeader("Content-Type") != null) {
-            request.contentType = httpServletRequest.getHeader("Content-Type").split(";")[0].trim().toLowerCase().intern();
+            request.contentType = resolveFormat(httpServletRequest.getHeader("Content-Type").split(";")[0].trim().toLowerCase().intern());
         } else {
-            request.contentType = "text/html";
+            request.contentType = resolveFormat(MediaType.ALL_VALUE);
         }
 
         if (httpServletRequest.getHeader("X-HTTP-Method-Override") != null) {
@@ -211,7 +211,7 @@ public class HTTPRequestAdapter {
             request.headers.put(hd.name.toLowerCase(), hd);
         }
 
-        request.format = resolveFormat(request.headers.getOrDefault("accept", new Header()).value());
+        request.accept = resolveFormat(request.headers.getOrDefault("accept", new Header()).value());
 
         return request;
     }
@@ -228,33 +228,33 @@ public class HTTPRequestAdapter {
      * Automatically resolve request format from the Accept header (in this
      * order : html > xml > json > text)
      */
-    public static MediaType resolveFormat(String accept) {
+    public static MediaType resolveFormat(String mediaType) {
 
-        if (accept == null || "*/*".equalsIgnoreCase(accept)) {
+        if (mediaType == null || "*/*".equalsIgnoreCase(mediaType)) {
             return MediaType.ALL;
         }
 
-        if (accept.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)) {
+        if (mediaType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)) {
             return MediaType.APPLICATION_FORM_URLENCODED;
         }
 
-        if (accept.contains("application/xhtml")
-                || accept.contains("text/html")
-                || accept.startsWith("*/*")) {
+        if (mediaType.contains("application/xhtml")
+                || mediaType.contains("text/html")
+                || mediaType.startsWith("*/*")) {
             return MediaType.TEXT_HTML;
         }
 
-        if (accept.contains("application/xml")
-                || accept.contains("text/xml")) {
+        if (mediaType.contains("application/xml")
+                || mediaType.contains("text/xml")) {
             return MediaType.APPLICATION_XML;
         }
 
-        if (accept.contains("text/plain")) {
+        if (mediaType.contains("text/plain")) {
             return MediaType.TEXT_PLAIN;
         }
 
-        if (accept.contains("application/json")
-                || accept.contains("text/javascript")) {
+        if (mediaType.contains("application/json")
+                || mediaType.contains("text/javascript")) {
             return MediaType.APPLICATION_JSON;
         }
 

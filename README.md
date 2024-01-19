@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.avolpe:openapi-springmvc-router:2.1.0'
+    implementation 'com.github.avolpe:openapi-springmvc-router:2.1.2'
 }
 ```
 

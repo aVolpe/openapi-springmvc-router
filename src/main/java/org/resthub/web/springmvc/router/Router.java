@@ -129,21 +129,19 @@ public class Router {
     public static List<Route> routes = new ArrayList<>(500);
 
     public static Route route(HTTPRequestAdapter request) {
-        if (logger.isTraceEnabled()) {
-            logger.trace("Route: {} - {}", request.path, request.querystring);
-        }
+        logger.trace("Route: {} - {}", request.path, request.querystring);
 
+        MediaType accept = request.accept;
+        String host = request.host;
+        String path = request.contextPath != null ? request.path.replace(request.contextPath, "") : request.path;
         for (Route route : routes) {
-            MediaType format = request.format;
-            String host = request.host;
-            String path = request.contextPath != null ? request.path.replace(request.contextPath, "") : request.path;
-            Map<String, String> args = route.matches(request.method, path, format, host);
+            Map<String, String> args = route.matches(request.method, path, accept, request.contentType, host);
 
             if (args != null) {
                 request.routeArgs = args;
                 request.action = route.action;
                 if (args.containsKey("format")) {
-                    request.setFormat(HTTPRequestAdapter.resolveFormat(args.get("format")));
+                    request.setAccept(HTTPRequestAdapter.resolveFormat(args.get("format")));
                 }
                 if (request.action.contains("{")) {
                     for (String arg : request.routeArgs.keySet()) {
@@ -164,16 +162,16 @@ public class Router {
     }
 
     public static Map<String, String> route(String method, String path) {
-        return route(method, path, null, null);
+        return route(method, path, null, null, null);
     }
 
     public static Map<String, String> route(String method, String path, MediaType accept) {
-        return route(method, path, accept, null);
+        return route(method, path, accept, null, null);
     }
 
-    public static Map<String, String> route(String method, String path, MediaType accept, String host) {
+    public static Map<String, String> route(String method, String path, MediaType accept, MediaType contextType, String host) {
         for (Route route : routes) {
-            Map<String, String> args = route.matches(method, path, accept, host);
+            Map<String, String> args = route.matches(method, path, accept, contextType, host);
             if (args != null) {
                 args.put("action", route.action);
                 return args;
@@ -245,7 +243,7 @@ public class Router {
                     // les parametres codes en dur dans la route matchent-ils ?
                     for (String staticKey : route.staticArgs.keySet()) {
                         if (staticKey.equals("format")) {
-                            if (!currentRequest.format.equals(route.staticArgs.get("format"))) {
+                            if (!currentRequest.accept.equals(route.staticArgs.get("format"))) {
                                 allRequiredArgsAreHere = false;
                                 break;
                             }
@@ -458,7 +456,8 @@ public class Router {
         Pattern hostPattern;
         List<Arg> args = new ArrayList<Arg>(3);
         public Map<String, String> staticArgs = new HashMap<String, String>(3);
-        public List<MediaType> formats = new ArrayList<>(1);
+        public List<MediaType> accepts = new ArrayList<>(1);
+        public List<MediaType> contentType = new ArrayList<>(1);
         String host;
         Arg hostArg = null;
         public int routesFileLine;
@@ -536,34 +535,38 @@ public class Router {
 
         // TODO: Add args names
 
-        private boolean contains(MediaType accept) {
-            if (accept != null && !this.formats.isEmpty()) {
-                for (MediaType mt : this.formats)
-                    if (accept.includes(mt)) return true;
+        private boolean canReturnMediaType(MediaType accept) {
+            if (accept != null && !this.accepts.isEmpty()) {
+                for (MediaType mt : this.accepts)
+                    if (mt.includes(accept)) return true;
                 return false;
             }
             return true;
         }
 
-        public Map<String, String> matches(String method, String path) {
-            return matches(method, path, null, null);
-        }
-
-        public Map<String, String> matches(String method, String path, MediaType accept) {
-            return matches(method, path, accept, null);
+        private boolean canReceiveMediaType(MediaType mediaType) {
+            if (mediaType != null && !this.contentType.isEmpty()) {
+                for (MediaType mt : this.contentType)
+                    if (mediaType.includes(mt)) return true;
+                return false;
+            }
+            return true;
         }
 
         /**
          * Check if the parts of a HTTP request equal this Route.
          *
-         * @param method GET/POST/etc.
-         * @param path   Part after domain and before query-string. Starts with a
-         *               "/".
-         * @param accept Format, e.g. html.
-         * @param domain the domain.
+         * @param method                  GET/POST/etc.
+         * @param path                    Part after domain and before query-string. Starts with a
+         *                                "/".
+         * @param expectedReturnMediaType Format, e.g. html.
+         * @param domain                  the domain.
          * @return ???
          */
-        public Map<String, String> matches(String method, String path, MediaType accept, String domain) {
+        public Map<String, String> matches(String method, String path,
+                                           MediaType expectedReturnMediaType,
+                                           MediaType requestMediaType,
+                                           String domain) {
             // If method is HEAD and we have a GET
             if (method == null || this.method.equals("*") || method.equalsIgnoreCase(this.method) || (method.equalsIgnoreCase("head") && ("get").equalsIgnoreCase(this.method))) {
 
@@ -575,7 +578,10 @@ public class Router {
                     hostMatches = hostMatcher.matches();
                 }
                 // Extract the host variable
-                if (matcher.matches() && contains(accept) && hostMatches) {
+                if (matcher.matches()
+                        && canReturnMediaType(expectedReturnMediaType)
+                        && canReceiveMediaType(requestMediaType)
+                        && hostMatches) {
 
                     Map<String, String> localArgs = new HashMap<>();
                     for (Arg arg : args) {
@@ -620,7 +626,7 @@ public class Router {
         }
 
         public String toFixedLengthString() {
-            return String.format("%-8s%-60s%-60s%-22s", method, path, action, MediaType.toString(this.formats));
+            return String.format("%-8s%-60s%-60s%22s -> %-22s", method, path, action, MediaType.toString(this.contentType), MediaType.toString(this.accepts));
         }
     }
 

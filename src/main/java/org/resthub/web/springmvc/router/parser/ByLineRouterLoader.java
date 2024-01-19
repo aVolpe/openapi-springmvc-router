@@ -64,7 +64,8 @@ public class ByLineRouterLoader {
         route.action = action;
         route.routesFile = sourceFile;
         route.routesFileLine = line;
-        route.formats = getAcceptContentTypes(headers);
+        route.accepts = getAcceptContentTypes(headers);
+        route.contentType = List.of(MediaType.ALL);
         route.staticArgs = getParms(params);
         route.compute();
         if (logger.isDebugEnabled()) {
