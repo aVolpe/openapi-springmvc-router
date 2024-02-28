@@ -131,6 +131,15 @@ public class HandlersStepdefs {
         HTTPRequestAdapter.parseRequest(request);
     }
 
+    @When("^I send the HTTP clean request \"([^\"]*)\" \"([^\"]*)\"$")
+    public void I_send_the_HTTP_clean_request(String method, String url) throws Throwable {
+
+        this.requestParams = null;
+        this.headers = List.of();
+        this.body = null;
+        this.queryParams = List.of();
+        I_send_the_HTTP_request(method, url);
+    }
 
     @When("^I send the HTTP request \"([^\"]*)\" \"([^\"]*)\"$")
     public void I_send_the_HTTP_request(String method, String url) throws Throwable {
@@ -167,7 +176,7 @@ public class HandlersStepdefs {
             }
             request.setContent(body.getBytes(StandardCharsets.UTF_8));
         }
-        if (!requestParams.isEmpty()) {
+        if (requestParams != null && !requestParams.isEmpty()) {
             assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE))
                     .withFailMessage("RequestParams is only available for application/x-www-form-urlencoded, given was %s", request.getContentType())
                     .isEqualTo(MediaType.APPLICATION_FORM_URLENCODED_VALUE);

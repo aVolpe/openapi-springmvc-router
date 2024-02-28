@@ -37,15 +37,17 @@
 		GET    /page/{id}     PageController.showPage
 	-->
 		 
-	<bean id="handlerMapping"
+    <bean id="router" class="org.resthub.web.springmvc.router.Router">
+        <constructor-arg ref="openApiResourceLoader"/>
+    </bean>
+
+    <bean id="openApiResourceLoader" class="org.resthub.web.springmvc.router.config.OpenApiResourceLoader">
+        <constructor-arg index="0" value="mappingroutes.conf,addroutes.conf,classpath*:wildcard-*.conf"/>
+    </bean>
+
+    <bean id="handlerMapping"
           class="org.resthub.web.springmvc.router.RouterHandlerMapping">
-		<property name="routeFiles">
-            <list>
-                <value>mappingroutes.conf</value>
-                <value>addroutes.conf</value>
-                <value>classpath*:wildcard-*.conf</value>
-            </list>
-        </property>
+        <constructor-arg ref="router"/>
     </bean>
 
 </beans>

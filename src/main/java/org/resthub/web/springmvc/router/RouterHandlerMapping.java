@@ -1,24 +1,16 @@
 package org.resthub.web.springmvc.router;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.resthub.web.springmvc.router.exceptions.NoRouteFoundException;
-import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
 import org.resthub.web.springmvc.router.support.RouterHandlerResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
-
-import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Implementation of the {@link org.springframework.web.servlet.HandlerMapping}
@@ -67,56 +59,12 @@ import java.util.List;
 public class RouterHandlerMapping extends AbstractHandlerMapping {
 
     private static final Logger logger = LoggerFactory.getLogger(RouterHandlerMapping.class);
-    private List<String> routeFiles;
-    private boolean autoReloadEnabled = false;
-    private RouterHandlerResolver methodResolver;
+    private final Router router;
+    private final RouterHandlerResolver methodResolver;
 
-    public RouterHandlerMapping() {
+    public RouterHandlerMapping(Router router) {
+        this.router = router;
         this.methodResolver = new RouterHandlerResolver();
-    }
-
-    /**
-     * Routes configuration Files names Injected by bean configuration (in
-     * servlet.xml)
-     */
-    public List<String> getRouteFiles() {
-        return routeFiles;
-    }
-
-    public void setRouteFiles(List<String> routeFiles) {
-        Assert.notEmpty(routeFiles, "routes configuration files list should not be empty");
-        this.routeFiles = routeFiles;
-    }
-
-    /**
-     * Route files auto-reloading
-     * Injected by bean configuration (in servlet.xml)
-     */
-    public boolean isAutoReloadEnabled() {
-        return autoReloadEnabled;
-    }
-
-    public void setAutoReloadEnabled(boolean autoReloadEnabled) {
-        this.autoReloadEnabled = autoReloadEnabled;
-    }
-
-    /**
-     * Reload routes configuration at runtime. No-op if configuration files
-     * didn't change since last reload.
-     */
-    public void reloadRoutesConfiguration() {
-        List<Resource> fileResources = new ArrayList<>();
-
-        try {
-            for (String fileName : this.routeFiles) {
-                fileResources.addAll(Arrays.asList(getApplicationContext().getResources(fileName)));
-            }
-
-            Router.detectChanges(fileResources);
-        } catch (IOException ex) {
-            throw new RouteFileParsingException(
-                    "Could not read route configuration files", ex);
-        }
     }
 
     /**
@@ -129,18 +77,10 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
 
         // Scan beans for Controllers
         this.methodResolver.setCachedControllers(getApplicationContext().getBeansWithAnnotation(Controller.class));
-        List<Resource> fileResources = new ArrayList<>();
+    }
 
-        try {
-            for (String fileName : this.routeFiles) {
-                fileResources.addAll(Arrays.asList(getApplicationContext().getResources(fileName)));
-            }
-            Router.load(fileResources);
-
-        } catch (IOException e) {
-            throw new RouteFileParsingException(
-                    "Could not read route configuration files", e);
-        }
+    public void addControllerToCache(String key, Object controller) {
+        this.methodResolver.addToCache(key, controller);
     }
 
     /**
@@ -156,16 +96,11 @@ public class RouterHandlerMapping extends AbstractHandlerMapping {
 
         HandlerMethod handler;
 
-        // reload routes files if configured in servlet-context
-        if (this.autoReloadEnabled) {
-            this.reloadRoutesConfiguration();
-        }
-
         try {
             // Adapt HTTPServletRequest for Router
             HTTPRequestAdapter rq = HTTPRequestAdapter.parseRequest(request);
             // Route request and resolve format
-            Router.Route route = Router.route(rq);
+            Router.Route route = router.route(rq);
             logger.debug("Looking up handler method for path {} ({} {} {})", route.path, route.method, route.path, route.action);
             handler = this.methodResolver.resolveHandler(route, rq.action, rq);
             // Add resolved route arguments to the request

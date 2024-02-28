@@ -35,6 +35,10 @@ public class RouterHandlerResolver {
         }
     }
 
+    public void addToCache(String key, Object controller) {
+        this.cachedControllers.put(key.toLowerCase(), controller);
+    }
+
     /**
      * Returns a proper HandlerMethod given the matching Route
      *

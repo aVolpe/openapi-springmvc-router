@@ -1,11 +1,11 @@
 package org.resthub.web.springmvc.router.openapi;
 
-import org.resthub.web.springmvc.router.RouterConfigurationSupport;
+import org.resthub.web.springmvc.router.config.OpenApiResourceLoader;
+import org.resthub.web.springmvc.router.config.RouterConfiguration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Arturo Volpe
@@ -13,14 +13,10 @@ import java.util.List;
  */
 @Configuration
 @ComponentScan(basePackages = "org.resthub.web.springmvc.router.controllers")
-public class OpenApiWebAppConfig extends RouterConfigurationSupport {
+public class OpenApiWebAppConfig extends RouterConfiguration {
 
     @Override
-    public List<String> listRouteFiles() {
-
-        List<String> routeFiles = new ArrayList<>();
-        routeFiles.add("classpath:petstore.yaml");
-
-        return routeFiles;
+    public OpenApiResourceLoader openApiRouterFiles(@Value("${test:test}") String routerFiles, ApplicationContext context) {
+        return new OpenApiResourceLoader("classpath:petstore.yaml", context);
     }
 }

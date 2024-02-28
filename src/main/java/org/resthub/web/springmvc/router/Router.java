@@ -3,6 +3,7 @@ package org.resthub.web.springmvc.router;
 import jregex.Matcher;
 import jregex.Pattern;
 import jregex.REFlags;
+import org.resthub.web.springmvc.router.config.OpenApiResourceLoader;
 import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
 import org.resthub.web.springmvc.router.exceptions.NoRouteFoundException;
 import org.resthub.web.springmvc.router.exceptions.RouteFileParsingException;
@@ -10,14 +11,13 @@ import org.resthub.web.springmvc.router.parser.ByLineRouterLoader;
 import org.resthub.web.springmvc.router.parser.OpenApiRouteLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.file.Files;
-import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,37 +29,47 @@ import java.util.stream.Collectors;
  * @author Brian Clozel
  * @see org.resthub.web.springmvc.router.RouterHandlerMapping
  */
-public class Router {
+public class Router implements InitializingBean {
 
+    private static final Logger logger = LoggerFactory.getLogger(Router.class);
+
+    public final List<Route> routes;
     /**
      * Timestamp the routes file was last loaded at.
      */
-    public static long lastLoading = -1;
-    private static final Logger logger = LoggerFactory.getLogger(Router.class);
+    public long lastLoading = -1;
 
-    public static void clear() {
+    public Router(OpenApiResourceLoader holder) throws IOException {
+        this.routes = new ArrayList<>(500);
+        load(holder.getRoutes());
+    }
+
+
+    public void clear() {
         routes.clear();
     }
 
     /**
      * Parse the routes file. This is called at startup.
      */
-    public static void load(List<Resource> fileResources) throws IOException {
+    public void load(List<Resource> fileResources) throws IOException {
         routes.clear();
         for (Resource res : fileResources) {
             routes.addAll(parse(res));
         }
 
         lastLoading = System.currentTimeMillis();
-
-        logger.info("Loaded routes: \n\t{}", routes.stream().map(Route::toFixedLengthString).collect(Collectors.joining("\n\t")));
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        logger.info("Loaded routes: \n\t{}", routes.stream().map(Route::toFixedLengthString).collect(Collectors.joining("\n\t")));
+    }
 
     /**
      * Add a route at the given position
      */
-    public static void addRoute(int position, Route route) {
+    public void addRoute(int position, Route route) {
         if (position > routes.size()) {
             position = routes.size();
         }
@@ -69,8 +79,9 @@ public class Router {
     /**
      * Add a route
      */
-    public static void addRoute(Route route) {
+    public void addRoute(Route route) {
         routes.add(route);
+        logger.info("Loaded route after startup: \n\t{}", route.toFixedLengthString());
     }
 
     /**
@@ -78,7 +89,7 @@ public class Router {
      * are added matters and we want the method to append the routes to the
      * list.
      */
-    public static void appendRoute(Route route) {
+    public void appendRoute(Route route) {
         routes.add(route);
     }
 
@@ -86,7 +97,7 @@ public class Router {
     /**
      * Add a new route at the beginning of the route list
      */
-    public static void prependRoute(Route route) {
+    public void prependRoute(Route route) {
         routes.add(0, route);
     }
 
@@ -96,7 +107,7 @@ public class Router {
      * @param fileResource the file to read
      * @return all found routes
      */
-    static List<Route> parse(Resource fileResource) throws IOException {
+    List<Route> parse(Resource fileResource) throws IOException {
 
         String fileAbsolutePath = fileResource.getURL().getPath();
 
@@ -110,25 +121,7 @@ public class Router {
     }
 
 
-    public static void detectChanges(List<Resource> fileResources) throws IOException {
-
-        boolean hasChanged = false;
-
-        for (Resource res : fileResources) {
-            if (Files.getLastModifiedTime(res.getFile().toPath()).compareTo(FileTime.fromMillis(lastLoading)) > 0) {
-                hasChanged = true;
-                break;
-            }
-        }
-
-        if (hasChanged) {
-            load(fileResources);
-        }
-    }
-
-    public static List<Route> routes = new ArrayList<>(500);
-
-    public static Route route(HTTPRequestAdapter request) {
+    public Route route(HTTPRequestAdapter request) {
         logger.trace("Route: {} - {}", request.path, request.querystring);
 
         MediaType accept = request.accept;
@@ -161,15 +154,15 @@ public class Router {
         throw new NoRouteFoundException(request.method, request.path);
     }
 
-    public static Map<String, String> route(String method, String path) {
+    public Map<String, String> route(String method, String path) {
         return route(method, path, null, null, null);
     }
 
-    public static Map<String, String> route(String method, String path, MediaType accept) {
+    public Map<String, String> route(String method, String path, MediaType accept) {
         return route(method, path, accept, null, null);
     }
 
-    public static Map<String, String> route(String method, String path, MediaType accept, MediaType contextType, String host) {
+    public Map<String, String> route(String method, String path, MediaType accept, MediaType contextType, String host) {
         for (Route route : routes) {
             Map<String, String> args = route.matches(method, path, accept, contextType, host);
             if (args != null) {
@@ -180,21 +173,21 @@ public class Router {
         return new HashMap<>(16);
     }
 
-    public static ActionDefinition reverse(String action) {
+    public ActionDefinition reverse(String action) {
         // Note the map is not <code>Collections.EMPTY_MAP</code> because it will be copied and changed.
         return reverse(action, new HashMap<>(16));
     }
 
-    public static String getFullUrl(String action, Map<String, Object> args) {
+    public String getFullUrl(String action, Map<String, Object> args) {
         return HTTPRequestAdapter.getCurrent().getBase() + reverse(action, args);
     }
 
-    public static String getFullUrl(String action) {
+    public String getFullUrl(String action) {
         // Note the map is not <code>Collections.EMPTY_MAP</code> because it will be copied and changed.
         return getFullUrl(action, new HashMap<>(16));
     }
 
-    public static ActionDefinition reverse(String action, Map<String, Object> args) {
+    public ActionDefinition reverse(String action, Map<String, Object> args) {
 
         HTTPRequestAdapter currentRequest = HTTPRequestAdapter.getCurrent();
 
@@ -349,7 +342,8 @@ public class Router {
         throw new NoHandlerFoundException(action, args);
     }
 
-    public static class ActionDefinition {
+
+    public class ActionDefinition {
 
         /**
          * The domain/host name.

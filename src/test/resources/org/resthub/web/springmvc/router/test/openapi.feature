@@ -5,6 +5,7 @@ Feature: java config support with openapi
 
   Scenario: Parsing open API definition
     Given I have a web application with javaconfig for openAPI in package "org.resthub.web.springmvc.router.openapi"
+
     When I send the HTTP request "GET" "/pets"
     Then the server should send an HTTP response with status "200"
 
@@ -39,3 +40,6 @@ Feature: java config support with openapi
       | name | Homero  |
       | id   | homer   |
     Then the server should send an HTTP response with status "201"
+
+    When I send the HTTP clean request "GET" "/v3/api-docs"
+    Then the server should send an HTTP response with status "200"
