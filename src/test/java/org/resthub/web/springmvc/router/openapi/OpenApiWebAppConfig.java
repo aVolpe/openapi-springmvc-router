@@ -1,9 +1,6 @@
 package org.resthub.web.springmvc.router.openapi;
 
-import org.resthub.web.springmvc.router.config.OpenApiResourceLoader;
-import org.resthub.web.springmvc.router.config.RouterConfiguration;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
+import org.resthub.web.springmvc.router.config.EnableOpenApiRouter;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,10 +10,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan(basePackages = "org.resthub.web.springmvc.router.controllers")
-public class OpenApiWebAppConfig extends RouterConfiguration {
+@EnableOpenApiRouter(config = "classpath:petstore.yaml")
+public class OpenApiWebAppConfig {
 
-    @Override
-    public OpenApiResourceLoader openApiRouterFiles(@Value("${test:test}") String routerFiles, ApplicationContext context) {
-        return new OpenApiResourceLoader("classpath:petstore.yaml", context);
-    }
 }

@@ -39,15 +39,9 @@ To configure this module, import the config in your main class
 
 ```java
 @Configuration
-@Import(RouterConfiguration.class)
+@EnableOpenApiRouter(config="classpath:openapi.yml")
 public class MyApplication {
 }
-```
-
-And define the properties:
-
-```properties
-openapi.router.routeFiles=classpath:/openapi.yaml
 ```
 
 ### Example Code
@@ -75,4 +69,13 @@ public class MyController {
         // Your code here
     }
 }
+```
+
+### Properties
+
+The following properties can be used to configure the module:
+
+```properties
+openapi.router.routeFiles=classpath:openapi.yml
+openapi.router.specRoute=/v3/api-docs
 ```
