@@ -1,11 +1,8 @@
 package org.resthub.web.springmvc.router.openapi;
 
-import org.resthub.web.springmvc.router.RouterConfigurationSupport;
+import org.resthub.web.springmvc.router.config.EnableOpenApiRouter;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Arturo Volpe
@@ -13,14 +10,7 @@ import java.util.List;
  */
 @Configuration
 @ComponentScan(basePackages = "org.resthub.web.springmvc.router.controllers")
-public class OpenApiWebAppConfig extends RouterConfigurationSupport {
+@EnableOpenApiRouter(config = "classpath:petstore.yaml")
+public class OpenApiWebAppConfig {
 
-    @Override
-    public List<String> listRouteFiles() {
-
-        List<String> routeFiles = new ArrayList<>();
-        routeFiles.add("classpath:petstore.yaml");
-
-        return routeFiles;
-    }
 }

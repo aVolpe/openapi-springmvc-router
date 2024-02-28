@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.avolpe:openapi-springmvc-router:2.1.2'
+    implementation 'com.github.avolpe:openapi-springmvc-router:2.2.0'
 }
 ```
 
@@ -28,23 +28,19 @@ If you're using Maven, add this to your `pom.xml`:
     <dependency>
         <groupId>com.github.avolpe</groupId>
         <artifactId>openapi-springmvc-router</artifactId>
-        <version>2.1.0</version>
+        <version>2.2.0</version>
     </dependency>
 </dependencies>
 ```
 
 ### Configuration
 
-To configure this module, add a new `@Configuration` class:
+To configure this module, import the config in your main class
 
 ```java
 @Configuration
-public class OpenApiWebAppConfig extends RouterConfigurationSupport {
-
-    @Override
-    public List<String> listRouteFiles() {
-        return List.of("classpath:petstore.yaml");
-    }
+@EnableOpenApiRouter(config="classpath:openapi.yml")
+public class MyApplication {
 }
 ```
 
@@ -73,4 +69,13 @@ public class MyController {
         // Your code here
     }
 }
+```
+
+### Properties
+
+The following properties can be used to configure the module:
+
+```properties
+openapi.router.routeFiles=classpath:openapi.yml
+openapi.router.specRoute=/v3/api-docs
 ```

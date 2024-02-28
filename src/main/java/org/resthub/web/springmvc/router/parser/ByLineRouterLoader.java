@@ -57,7 +57,7 @@ public class ByLineRouterLoader {
         return getRoute(method, path, action, params, headers, null, 0);
     }
 
-    public Route getRoute(String method, String path, String action, String params, String headers, String sourceFile, int line) {
+    public static Route getRoute(String method, String path, String action, String params, String headers, String sourceFile, int line) {
         Route route = new Route();
         route.method = method;
         route.path = path.replace("//", "/");
@@ -75,7 +75,7 @@ public class ByLineRouterLoader {
         return route;
     }
 
-    public List<MediaType> getAcceptContentTypes(String params) {
+    public static List<MediaType> getAcceptContentTypes(String params) {
         if (params == null || params.length() < 1) {
             return Collections.emptyList();
         }
@@ -83,7 +83,7 @@ public class ByLineRouterLoader {
         return Arrays.stream(params.split(",")).map(HTTPRequestAdapter::resolveFormat).toList();
     }
 
-    public Map<String, String> getParms(String params) {
+    public static Map<String, String> getParms(String params) {
         if (params == null || params.length() < 1) {
             return Collections.emptyMap();
         }

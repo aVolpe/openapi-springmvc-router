@@ -6,12 +6,14 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.Router;
+import org.resthub.web.springmvc.router.config.OpenApiResourceLoader;
 import org.resthub.web.springmvc.router.exceptions.NoHandlerFoundException;
 import org.resthub.web.springmvc.router.parser.ByLineRouterLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,15 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ReverseRoutingStepdefs {
 
     private HTTPRequestAdapter requestAdapter;
-
     private Router.ActionDefinition resolvedAction;
-
     private Exception thrownException;
+    private Router router;
+
+    public ReverseRoutingStepdefs() throws IOException {
+        this.router = new Router(new OpenApiResourceLoader(null, null));
+    }
 
     @Given("^an empty Router$")
     public void an_empty_Router() throws Throwable {
         // clear routes from the static Router
-        Router.clear();
+        router.clear();
         // clear RequestContextHolder from previous tests
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "http://localhost/");
         request.addHeader("host", "localhost");
@@ -39,7 +44,7 @@ public class ReverseRoutingStepdefs {
 
     @Given("^I have a route with method \"([^\"]*)\" path \"([^\"]*)\" action \"([^\"]*)\"$")
     public void I_have_a_route_with_method_url_action(String method, String path, String action) throws Throwable {
-        Router.prependRoute(new ByLineRouterLoader().buildRoute(method, path, action));
+        router.prependRoute(new ByLineRouterLoader().buildRoute(method, path, action));
     }
 
     @Given("^I have routes:$")
@@ -47,7 +52,7 @@ public class ReverseRoutingStepdefs {
         for (RouteItem item : routes
                 .asMaps().stream().map(m -> new RouteItem(m.get("method"), m.get("path"), m.get("action"), m.get("params")))
                 .collect(Collectors.toList())) {
-            Router.addRoute(new ByLineRouterLoader().buildRoute(item.method, item.path, item.action, item.params, null));
+            router.addRoute(new ByLineRouterLoader().buildRoute(item.method, item.path, item.action, item.params, null));
         }
     }
 
@@ -72,7 +77,7 @@ public class ReverseRoutingStepdefs {
             routeParams.put(param.key, param.value);
         }
         try {
-            resolvedAction = Router.reverse(path, routeParams);
+            resolvedAction = router.reverse(path, routeParams);
         } catch (Exception exc) {
             this.thrownException = exc;
         }
@@ -80,7 +85,7 @@ public class ReverseRoutingStepdefs {
 
     @When("^I try to reverse route \"([^\"]*)\"$")
     public void I_try_to_reverse_route(String action) throws Throwable {
-        resolvedAction = Router.reverse(action);
+        resolvedAction = router.reverse(action);
     }
 
     @Then("^I should get an action with path \"([^\"]*)\"$")
