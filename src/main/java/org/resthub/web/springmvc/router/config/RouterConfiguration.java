@@ -20,6 +20,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.resource.ResourceUrlProvider;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
 import java.util.List;
@@ -139,6 +140,7 @@ public class RouterConfiguration extends DelegatingWebMvcConfiguration implement
             this.routes = routes.getRoutes();
         }
 
+        @ResponseBody
         public Resource get() {
             if (this.routes.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "openApiSpec not found");
             return this.routes.get(0);

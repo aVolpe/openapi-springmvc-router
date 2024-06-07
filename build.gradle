@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.github.avolpe'
-version = '2.2.0'
+version = '2.2.1'
 description = 'openapi-springmvc-router'
 
 repositories {
@@ -33,7 +33,7 @@ dependencyManagement {
             entry 'swagger-core'
         }
 
-        dependencySet(group: 'io.swagger.parser.v3', version: '2.1.16') {
+        dependencySet(group: 'io.swagger.parser.v3', version: '2.1.22') {
             entry 'swagger-parser-v3'
         }
 
