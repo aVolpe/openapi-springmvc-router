@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,10 +29,16 @@ public class OpenApiRouteLoader {
     public List<Route> load(Resource data) {
 
         try (InputStream ignored = data.getInputStream()) {
+
+            // Copy the spec to a file, this is needed because the parser don't work if the input stream is not a valid
+            // file, it can't resolve the dependencies inside the spec.
+            var tempFile = Files.createTempFile(data.getFilename(), ".yaml");
+            Files.copy(data.getInputStream(), tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
             ParseOptions parseOptions = new ParseOptions();
             parseOptions.setResolveFully(true);
             OpenAPI loaded = new OpenAPIV3Parser().read(
-                    data.getURL().toString(),
+                    tempFile.toFile().getAbsolutePath(),
                     null,
                     parseOptions
             );
