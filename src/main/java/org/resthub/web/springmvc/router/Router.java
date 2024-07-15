@@ -86,6 +86,18 @@ public class Router implements InitializingBean {
     }
 
     /**
+     * Add a route
+     */
+    public void addRoutes(Route... route) {
+        var newRoutes = List.of(route);
+        routes.addAll(newRoutes);
+        logger.info("Loaded routes after startup: \n\t{}",
+                newRoutes.stream()
+                        .map(Route::toFixedLengthString)
+                        .collect(Collectors.joining("\n\t")));
+    }
+
+    /**
      * This is used internally when reading the route file. The order the routes
      * are added matters and we want the method to append the routes to the
      * list.

@@ -44,3 +44,16 @@ Feature: java config support with openapi
 
     When I send the HTTP clean request "GET" "/v3/api-docs"
     Then the server should send an HTTP response with status "200"
+
+    When I send the HTTP clean request "GET" "/v3/api-docs/petstore"
+    Then the server should send an HTTP response with status "200"
+
+    When I send the HTTP clean request "GET" "/v3/api-docs/other-openapi"
+    Then the server should send an HTTP response with status "200"
+    Then the response is a valid open api
+
+    When I send the HTTP request "GET" "/v3/api-docs/other-openapi" with query params:
+      | name    | value           |
+      | resolve | true            |
+    Then the server should send an HTTP response with status "200"
+    Then the response is a valid open api

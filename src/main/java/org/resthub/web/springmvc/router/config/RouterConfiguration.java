@@ -3,6 +3,7 @@ package org.resthub.web.springmvc.router.config;
 import org.resthub.web.springmvc.router.Router;
 import org.resthub.web.springmvc.router.RouterHandlerMapping;
 import org.resthub.web.springmvc.router.parser.ByLineRouterLoader;
+import org.resthub.web.springmvc.router.support.OpenApiSpecController;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -10,17 +11,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.io.Resource;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.format.support.FormattingConversionService;
-import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.resource.ResourceUrlProvider;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
 import java.util.List;
@@ -107,8 +104,9 @@ public class RouterConfiguration extends DelegatingWebMvcConfiguration implement
             OpenApiResourceLoader routes) {
         var finalRoute = getApiDocsPath(specRoute);
         if (StringUtils.hasText(finalRoute)) {
-            router.addRoute(
-                    ByLineRouterLoader.getRoute("GET", finalRoute, "apiDocsRoute.get", null, null, "RouterConfiguration", 1)
+            router.addRoutes(
+                    ByLineRouterLoader.getRoute("GET", finalRoute, "apiDocsRoute.get", null, null, "RouterConfiguration", 1),
+                    ByLineRouterLoader.getRoute("GET", "%s/{spec}".formatted(finalRoute), "apiDocsRoute.get", null, null, "RouterConfiguration", 1)
             );
 
             var toRet = new OpenApiSpecController(routes);
@@ -132,18 +130,4 @@ public class RouterConfiguration extends DelegatingWebMvcConfiguration implement
         return this.apiDocsPath;
     }
 
-    private static class OpenApiSpecController {
-
-        private final List<Resource> routes;
-
-        public OpenApiSpecController(OpenApiResourceLoader routes) {
-            this.routes = routes.getRoutes();
-        }
-
-        @ResponseBody
-        public Resource get() {
-            if (this.routes.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "openApiSpec not found");
-            return this.routes.get(0);
-        }
-    }
 }

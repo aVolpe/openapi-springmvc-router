@@ -5,6 +5,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.RouterHandlerMapping;
 import org.resthub.web.springmvc.router.support.RouterHandler;
@@ -330,6 +333,7 @@ public class HandlersStepdefs {
             interceptor.preHandle(request, lastResponse, handler);
         }
 
+        System.out.println(this.request.getRequestURI());
         ha.handle(request, lastResponse, handler);
         System.out.println(handler + " response: " + lastResponse.getContentAsString());
 
@@ -343,6 +347,23 @@ public class HandlersStepdefs {
         assertThat(actualHeaderValue)
                 .isNotNull()
                 .isEqualTo(expectedHeaderValue);
+    }
+
+    @Then("the response is a valid open api")
+    public void the_response_is_a_valid_open_api() throws Exception {
+
+        String response = lastResponse.getContentAsString();
+
+        var options = new ParseOptions();
+        options.setResolve(false);
+        options.setValidateExternalRefs(true);
+        options.setValidateInternalRefs(true);
+        options.setRemoteRefAllowList(List.of("NONE"));
+        SwaggerParseResult result = new OpenAPIV3Parser()
+                .readContents(response, null, options);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getMessages()).isEmpty();
     }
 
     public static class HTTPHeader {
