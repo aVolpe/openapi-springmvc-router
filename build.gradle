@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.github.avolpe'
-version = '2.2.2'
+version = '2.2.3'
 description = 'openapi-springmvc-router'
 
 repositories {
