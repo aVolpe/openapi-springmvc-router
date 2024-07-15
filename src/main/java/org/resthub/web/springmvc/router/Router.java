@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -408,6 +409,10 @@ public class Router implements InitializingBean {
             }
             url = url.replace("http:", "https:");
             return this;
+        }
+
+        public URI asUri() {
+            return URI.create(this.url);
         }
     }
 

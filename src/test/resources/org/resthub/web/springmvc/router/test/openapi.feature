@@ -40,6 +40,7 @@ Feature: java config support with openapi
       | name | Homero  |
       | id   | homer   |
     Then the server should send an HTTP response with status "201"
+    Then the server should send an HTTP header with name "Location" and value "/pets/homer"
 
     When I send the HTTP clean request "GET" "/v3/api-docs"
     Then the server should send an HTTP response with status "200"
