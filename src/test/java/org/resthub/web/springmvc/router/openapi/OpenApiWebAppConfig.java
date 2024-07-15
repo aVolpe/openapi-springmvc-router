@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan(basePackages = "org.resthub.web.springmvc.router.controllers")
-@EnableOpenApiRouter(config = "classpath:petstore.yaml")
+@EnableOpenApiRouter(config = {"classpath:petstore.yaml", "classpath:other-openapi.yaml"})
 public class OpenApiWebAppConfig {
 
 }

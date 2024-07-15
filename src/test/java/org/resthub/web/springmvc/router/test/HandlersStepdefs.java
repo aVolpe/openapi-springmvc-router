@@ -5,6 +5,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.resthub.web.springmvc.router.HTTPRequestAdapter;
 import org.resthub.web.springmvc.router.RouterHandlerMapping;
 import org.resthub.web.springmvc.router.support.RouterHandler;
@@ -50,6 +53,7 @@ public class HandlersStepdefs {
     private String host = "example.org";
 
     private HandlerExecutionChain chain;
+    private MockHttpServletResponse lastResponse;
 
     @Given("^I have a web application with the config locations \"([^\"]*)\"$")
     public void I_have_a_web_applications_with_the_config_locations(String locations) throws Throwable {
@@ -316,7 +320,7 @@ public class HandlersStepdefs {
     public void the_server_should_send_an_HTTP_response_with_status(int status) throws Throwable {
 
         RouterHandler handler = null;
-        MockHttpServletResponse response = new MockHttpServletResponse();
+        this.lastResponse = new MockHttpServletResponse();
 
         if (chain != null) {
             handler = (RouterHandler) chain.getHandler();
@@ -326,13 +330,40 @@ public class HandlersStepdefs {
         HandlerInterceptor[] interceptors = chain.getInterceptors();
 
         for (HandlerInterceptor interceptor : interceptors) {
-            interceptor.preHandle(request, response, handler);
+            interceptor.preHandle(request, lastResponse, handler);
         }
 
-        ha.handle(request, response, handler);
-        System.out.println(handler + " response: " + response.getContentAsString());
+        System.out.println(this.request.getRequestURI());
+        ha.handle(request, lastResponse, handler);
+        System.out.println(handler + " response: " + lastResponse.getContentAsString());
 
-        assertThat(response.getStatus()).isEqualTo(status);
+        assertThat(lastResponse.getStatus()).isEqualTo(status);
+    }
+
+    @Then("the server should send an HTTP header with name {string} and value {string}")
+    public void the_server_should_send_an_http_header_with_name_and_value(String headerName, String expectedHeaderValue) {
+
+        var actualHeaderValue = lastResponse.getHeader(headerName);
+        assertThat(actualHeaderValue)
+                .isNotNull()
+                .isEqualTo(expectedHeaderValue);
+    }
+
+    @Then("the response is a valid open api")
+    public void the_response_is_a_valid_open_api() throws Exception {
+
+        String response = lastResponse.getContentAsString();
+
+        var options = new ParseOptions();
+        options.setResolve(false);
+        options.setValidateExternalRefs(true);
+        options.setValidateInternalRefs(true);
+        options.setRemoteRefAllowList(List.of("NONE"));
+        SwaggerParseResult result = new OpenAPIV3Parser()
+                .readContents(response, null, options);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getMessages()).isEmpty();
     }
 
     public static class HTTPHeader {

@@ -1,5 +1,6 @@
 package org.resthub.web.springmvc.router.controllers;
 
+import org.resthub.web.springmvc.router.Router;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -16,6 +17,12 @@ import java.util.Map;
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE,
         consumes = MediaType.APPLICATION_JSON_VALUE)
 public class MyTestController {
+
+    private final Router router;
+
+    public MyTestController(Router router) {
+        this.router = router;
+    }
 
     public void simpleAction() {
     }
@@ -65,7 +72,7 @@ public class MyTestController {
     @RequestMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Map<String, String>> postPetForm(@RequestParam("name") String name, @RequestParam("id") String id) throws URISyntaxException {
 
-        return ResponseEntity.created(new URI("/"))
+        return ResponseEntity.created(router.reverse("myTestController.showPetById", Map.of("petId", id)).asUri())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Collections.singletonMap("data", name + ":" + id));
     }
