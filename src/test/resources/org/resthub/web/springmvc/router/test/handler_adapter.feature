@@ -62,7 +62,7 @@ Feature: Handler adapter support
       | value    | 55                              |
 
   Scenario: Checking that secured routes are protected
-    Given I have a web application with the config locations "/bindingTestContext.xml,/securityContext.xml"
+    Given I have a web application with javaconfig in package "org.resthub.web.springmvc.router.security"
     When I send the HTTP request "GET" "/security/test" to host "myotherhost.com"
     Then the handler should raise a security exception
 
