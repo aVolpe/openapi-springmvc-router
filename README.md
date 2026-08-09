@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.avolpe:openapi-springmvc-router:2.2.3'
+    implementation 'com.github.avolpe:openapi-springmvc-router:3.0.0'
 }
 ```
 
@@ -28,7 +28,7 @@ If you're using Maven, add this to your `pom.xml`:
     <dependency>
         <groupId>com.github.avolpe</groupId>
         <artifactId>openapi-springmvc-router</artifactId>
-        <version>2.2.3</version>
+        <version>3.0.0</version>
     </dependency>
 </dependencies>
 ```
